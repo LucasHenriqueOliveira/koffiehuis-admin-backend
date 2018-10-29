@@ -34,4 +34,26 @@ class StatusController extends Controller
             'message' => 'Status inserido com sucesso.'
         ], Response::HTTP_OK);
     }
+
+    public function remove(Request $request, $id) {
+        try {
+            DB::update('UPDATE `status` SET `active` = ? WHERE id = ?', [0, $id]);
+            $list = DB::select("SELECT * FROM `status` WHERE `active` = 1");
+            $message = 'Status deletado com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function edit(Request $request) {
+        try {
+            DB::update('UPDATE `status` SET `nome` = ?, `porcentagem` = ? WHERE id = ?', [$request->nome, $request->porcentagem, $request->id]);
+            $list = DB::select("SELECT * FROM `status` WHERE `active` = 1");
+            $message = 'Status alterado com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
 }
