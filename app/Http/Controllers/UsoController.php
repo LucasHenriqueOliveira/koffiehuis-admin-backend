@@ -40,7 +40,18 @@ class UsoController extends Controller
         try {
             DB::update('UPDATE condicoes_uso SET `active` = ? WHERE id = ?', [0, $id]);
             $list = DB::select("SELECT * FROM `condicoes_uso` WHERE `active` = 1");
-            $message = 'Condições de uso deletado com sucesso.';
+            $message = 'Condição de uso deletado com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function edit(Request $request) {
+        try {
+            DB::update('UPDATE condicoes_uso SET `pergunta` = ? WHERE id = ?', [$request->pergunta, $request->id]);
+            $list = DB::select("SELECT * FROM `condicoes_uso` WHERE `active` = 1");
+            $message = 'Condição de uso alterado com sucesso.';
             return $this->successResponse($list, $message);
         } catch (Exception $e) {
             return $this->failedResponse();
