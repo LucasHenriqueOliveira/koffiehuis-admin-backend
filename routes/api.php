@@ -16,9 +16,12 @@ Route::group([
 
     Route::get('status', 'StatusController@get');
     Route::post('status', 'StatusController@save');
+    Route::put('status', 'StatusController@edit');
+    Route::delete('status/{id}', 'StatusController@remove');
 
     Route::get('uso', 'UsoController@get');
     Route::post('uso', 'UsoController@save');
+    Route::put('uso', 'UsoController@edit');
     Route::delete('uso/{id}', 'UsoController@remove');
 
     Route::post('login', 'AuthController@login');
