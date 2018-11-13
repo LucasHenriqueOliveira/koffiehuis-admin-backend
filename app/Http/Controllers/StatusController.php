@@ -28,10 +28,10 @@ class StatusController extends Controller
         ], Response::HTTP_NOT_FOUND);
     }
 
-    public function successResponse($data) {
+    public function successResponse($data, $message) {
         return response()->json([
             'data' => $data,
-            'message' => 'Status inserido com sucesso.'
+            'message' => $message
         ], Response::HTTP_OK);
     }
 
