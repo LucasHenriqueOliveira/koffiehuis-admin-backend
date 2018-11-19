@@ -37,6 +37,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatFormFieldModule, MatInputModule, MatAutocompleteModule, MatButtonModule, MatProgressSpinnerModule } from '@angular/material';
 import { UsuariosComponent } from './components/usuarios/usuarios.component';
 import { CarrosComponent } from './components/carros/carros.component';
+import { DashboardService } from './services/dashboard.service';
 registerLocaleData(ptBr);
 
 
@@ -91,7 +92,8 @@ registerLocaleData(ptBr);
     StatusService,
     UsoService,
     { provide: LOCALE_ID, useValue: 'pt-PT' },
-    NgbActiveModal
+    NgbActiveModal,
+    DashboardService
   ],
   bootstrap: [AppComponent],
   entryComponents: [

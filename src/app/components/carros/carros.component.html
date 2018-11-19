@@ -1,3 +1,27 @@
-<p>
-  carros works!
-</p>
+<div class="table-responsive">
+	<p>
+		Total de carros: {{ arrCarros.length }}
+	</p>
+	<table class="table table-striped" *ngIf="arrCarros.length">
+		<thead>
+			<tr>
+				<th>Dados</th>
+				<th>Veículo</th>
+				<th class="text-center">Data de criação</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr *ngFor="let carro of arrCarros">
+				<td>
+					Placa: {{ carro.placa }} <br />
+					Renavam: {{ carro.renavam }} <br />
+					Chassi: {{ carro.chassi }} <br />
+					{{ carro.ano_modelo }} / {{ carro.ano_fabricacao }}<br />
+				</td>
+				<td>{{ carro.marca }} - {{ carro.modelo }}</td>
+				<td class="text-center">{{ carro.data }}</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+<div [ngClass]="{'loading': loading}"></div>

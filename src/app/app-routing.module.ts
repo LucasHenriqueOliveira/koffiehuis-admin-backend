@@ -13,8 +13,16 @@ import { ManualComponent } from './components/manual/manual.component';
 import { ListaComponent } from './components/lista/lista.component';
 import { StatusComponent } from './components/status/status.component';
 import { UsoComponent } from './components/uso/uso.component';
+import { UsuariosComponent } from './components/usuarios/usuarios.component';
+import { CarrosComponent } from './components/carros/carros.component';
 
 const appRoutes: Routes = [
+  {
+    path: '',
+    redirectTo: '/login',
+    pathMatch: 'full',
+    canActivate: [BeforeLoginService]
+  },
   {
     path: 'login',
     component: LoginComponent,
@@ -58,6 +66,16 @@ const appRoutes: Routes = [
   {
     path: 'status',
     component: StatusComponent,
+    canActivate: [AfterLoginService]
+  },
+  {
+    path: 'usuarios',
+    component: UsuariosComponent,
+    canActivate: [AfterLoginService]
+  },
+  {
+    path: 'carros',
+    component: CarrosComponent,
     canActivate: [AfterLoginService]
   },
   {

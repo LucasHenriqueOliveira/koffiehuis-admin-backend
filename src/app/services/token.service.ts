@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
+import { Constants } from '../../app/app-constants';
 
 @Injectable()
 export class TokenService {
+
+  constants: any = Constants;
   private iss = {
-    login: 'http://localhost:8000/api/login',
-    signup: 'http://localhost:8000/api/signup'
+    login: `${this.constants.api}/login`,
+    signup: `${this.constants.api}/signup`
   };
 
   constructor() { }

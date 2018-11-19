@@ -1,28 +1,29 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Constants } from '../../app/app-constants';
 
 @Injectable({
   providedIn: 'root'
 })
 export class StatusService {
 
-  private baseUrl = 'http://localhost:8000/api';
+  constants: any = Constants;
 
   constructor(private http: HttpClient) { }
 
   status() {
-    return this.http.get(`${this.baseUrl}/status`);
+    return this.http.get(`${this.constants.api}/status`);
   }
 
   save(data) {
-    return this.http.post(`${this.baseUrl}/status`, data);
+    return this.http.post(`${this.constants.api}/status`, data);
   }
 
   remove(id) {
-    return this.http.delete(`${this.baseUrl}/status/${id}`);
+    return this.http.delete(`${this.constants.api}/status/${id}`);
   }
 
   edit(data) {
-    return this.http.put(`${this.baseUrl}/status`, data);
+    return this.http.put(`${this.constants.api}/status`, data);
   }
 }
