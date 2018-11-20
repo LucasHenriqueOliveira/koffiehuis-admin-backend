@@ -12,28 +12,15 @@ class ManualController extends Controller
     // MANUAL -------------------------------------
 
     public function save(Request $request) {
+        try {
 
-        if ($request->id) {
-            try {
+            for($i = 0; $i < count($request->itens); $i++) {
                 DB::insert('INSERT INTO `manual_carro` (`id_manual`, `km`, `tempo`, `id_marca`, `id_modelo`) VALUES (?, ?, ?, ?, ?)', 
-                [$request->id, $request->km, $request->meses, $request->selectedMarca, $request->selectedModelo]);
-                return $this->successResponse();
-            } catch (Exception $e) {
-                return $this->failedResponse();
+                [$request->itens[$i]['id'], $request->itens[$i]['km'], $request->itens[$i]['meses'], $request->selectedMarca, $request->selectedModelo]);
             }
-        } else {
-            try {
-                DB::insert('INSERT INTO `manual` (`item`) VALUES (?)', [$request->item]);
-
-                $id = DB::getPdo()->lastInsertId();
-
-                DB::insert('INSERT INTO `manual_carro` (`id_manual`, `km`, `tempo`, `id_marca`, `id_modelo`) VALUES (?, ?, ?, ?, ?)', 
-                [$id, $request->km, $request->meses, $request->selectedMarca, $request->selectedModelo]);
-
-                return $this->successResponse(null, 'Item do manual inserido com sucesso.');
-            } catch (Exception $e) {
-                return $this->failedResponse();
-            }
+            return $this->successResponse(null, 'Plano de manutenção inserido com sucesso.');
+        } catch (Exception $e) {
+            return $this->failedResponse();
         }
     }
 
