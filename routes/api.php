@@ -18,6 +18,11 @@ Route::group([
     Route::delete('manual/{id}', 'ManualController@remove');
     Route::put('manual', 'ManualController@edit');
 
+    Route::get('manual-itens', 'ManualController@getItemManual');
+    Route::post('manual-itens', 'ManualController@saveItemManual');
+    Route::delete('manual-itens/{id}', 'ManualController@removeItemManual');
+    Route::put('manual-itens', 'ManualController@editItemManual');
+    
     Route::get('manual-item', 'ManualController@getItem');
     Route::post('manual-item', 'ManualController@saveItem');
     Route::delete('manual-item/{id}', 'ManualController@removeItem');

@@ -82,6 +82,45 @@ class ManualController extends Controller
         }
     }
 
+    // ITEM DO MANUAL -------------------------------------
+
+    public function getItemManual(Request $request) {
+        return DB::select("SELECT `id`, `item` FROM `manual` WHERE `active` = 1");
+    }
+
+    public function saveItemManual(Request $request) {
+        try {
+            DB::insert('INSERT INTO `manual` (`item`) VALUES (?)', [$request->item]);
+            $list = $this->getItemManual($request);
+
+            return $this->successResponse($list, 'Item inserido com sucesso.');
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function removeItemManual(Request $request, $id) {
+        try {
+            DB::update('UPDATE `manual` SET `active` = 0 WHERE id = ?', [$request->id]);
+            $list = $this->getItemManual($request);
+            $message = 'Item deletado com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function editItemManual(Request $request) {
+        try {
+            DB::update('UPDATE `manual` SET `item` = ? WHERE id = ?', [$request->item, $request->id]);
+            $list = $this->getItemManual($request);
+            $message = 'Item alterado com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
     // ITEM -------------------------------------
 
     public function saveItem(Request $request) {
