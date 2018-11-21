@@ -120,8 +120,9 @@ class ManualController extends Controller
 
     public function removeManualCarro(Request $request, $id) {
         try {
+            $veiculo = DB::select("SELECT `id_modelo` FROM `manual_carro` WHERE `id` = ?", [$request->id]);
             DB::update('UPDATE `manual_carro` SET `active` = 0 WHERE id = ?', [$request->id]);
-            $list = $this->getManualCarro($request);
+            $list = $this->getManualCarro($request, $veiculo[0]->id_modelo);
             $message = 'Item deletado com sucesso.';
             return $this->successResponse($list, $message);
         } catch (Exception $e) {
@@ -131,9 +132,10 @@ class ManualController extends Controller
 
     public function editManualCarro(Request $request) {
         try {
+            $veiculo = DB::select("SELECT `id_modelo` FROM `manual_carro` WHERE `id` = ?", [$request->id]);
             DB::update('UPDATE `manual_carro` SET `id_manual` = ?, `km` = ?, `tempo` = ? 
                 WHERE id = ?', [$request->id_manual, $request->km, $request->tempo, $request->id]);
-            $list = $this->getManualCarro($request);
+            $list = $this->getManualCarro($request, $veiculo[0]->id_modelo);
             $message = 'Item alterado com sucesso.';
             return $this->successResponse($list, $message);
         } catch (Exception $e) {
