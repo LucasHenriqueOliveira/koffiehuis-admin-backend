@@ -28,6 +28,10 @@ Route::group([
     Route::delete('manual-item/{id}', 'ManualController@removeItem');
     Route::put('manual-item', 'ManualController@editItem');
 
+    Route::get('manual-carro/{modelo}', 'ManualController@getManualCarro');
+    Route::delete('manual-carro/{id}', 'ManualController@removeManualCarro');
+    Route::put('manual-carro', 'ManualController@editManualCarro');
+
     Route::get('status', 'StatusController@get');
     Route::post('status', 'StatusController@save');
     Route::put('status', 'StatusController@edit');

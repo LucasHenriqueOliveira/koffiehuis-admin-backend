@@ -108,6 +108,39 @@ class ManualController extends Controller
         }
     }
 
+    // MANUAL CARRO -----------------------------
+
+    public function getManualCarro(Request $request, $modelo) {
+        return DB::select("SELECT `manual_carro`.`id`, `manual`.`item`, `manual_carro`.`id_modelo`, `manual_carro`.`id_manual`,
+            `manual_carro`.`km`, `manual_carro`.`tempo`
+            FROM `manual_carro`
+            INNER JOIN `manual` ON `manual_carro`.`id_manual` = `manual`.`id`
+         WHERE `manual_carro`.`id_modelo` = ? AND `manual_carro`.`active` = 1 AND `manual`.`active` = 1", [$modelo]);
+    }
+
+    public function removeManualCarro(Request $request, $id) {
+        try {
+            DB::update('UPDATE `manual_carro` SET `active` = 0 WHERE id = ?', [$request->id]);
+            $list = $this->getManualCarro($request);
+            $message = 'Item deletado com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function editManualCarro(Request $request) {
+        try {
+            DB::update('UPDATE `manual_carro` SET `id_manual` = ?, `km` = ?, `tempo` = ? 
+                WHERE id = ?', [$request->id_manual, $request->km, $request->tempo, $request->id]);
+            $list = $this->getManualCarro($request);
+            $message = 'Item alterado com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
     // ITEM -------------------------------------
 
     public function saveItem(Request $request) {
