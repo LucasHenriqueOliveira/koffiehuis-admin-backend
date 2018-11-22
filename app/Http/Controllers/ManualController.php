@@ -115,7 +115,7 @@ class ManualController extends Controller
 
             for($i = 0; $i < count($request->itens); $i++) {
                 DB::insert('INSERT INTO `manual_carro` (`id_manual`, `km`, `tempo`, `id_marca`, `id_modelo`) VALUES (?, ?, ?, ?, ?)', 
-                [$request->itens[$i]['id_manual'], $request->itens[$i]['km'], $request->itens[$i]['meses'], $request->selectedMarca, $request->selectedModelo]);
+                [$request->itens[$i]['id_manual'], $request->itens[$i]['km'], $request->itens[$i]['tempo'], $request->selectedMarca, $request->selectedModelo]);
             }
             return $this->successResponse(null, 'Cópia realizada com sucesso.');
         } catch (Exception $e) {
