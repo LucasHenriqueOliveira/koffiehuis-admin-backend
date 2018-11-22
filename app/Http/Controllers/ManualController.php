@@ -110,6 +110,19 @@ class ManualController extends Controller
 
     // MANUAL CARRO -----------------------------
 
+    public function saveManualCarro(Request $request) {
+        try {
+
+            for($i = 0; $i < count($request->itens); $i++) {
+                DB::insert('INSERT INTO `manual_carro` (`id_manual`, `km`, `tempo`, `id_marca`, `id_modelo`) VALUES (?, ?, ?, ?, ?)', 
+                [$request->itens[$i]['id_manual'], $request->itens[$i]['km'], $request->itens[$i]['meses'], $request->selectedMarca, $request->selectedModelo]);
+            }
+            return $this->successResponse(null, 'Cópia realizada com sucesso.');
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
     public function getManualCarro(Request $request, $modelo) {
         return DB::select("SELECT `manual_carro`.`id`, `manual`.`item`, `manual_carro`.`id_modelo`, `manual_carro`.`id_manual`,
             `manual_carro`.`km`, `manual_carro`.`tempo`
