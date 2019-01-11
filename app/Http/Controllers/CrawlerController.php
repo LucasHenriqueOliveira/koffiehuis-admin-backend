@@ -63,4 +63,99 @@ class CrawlerController extends Controller
         ], Response::HTTP_OK);
     }
 
+    public function modelo(Request $request) {
+        try {
+            $marcas = DB::select("SELECT * FROM `marca`");
+            
+            foreach ($marcas as $marca) {
+                $url = 'https://fipe.webmotors.com.br/fipe/vehicle/list/models/?id=' . $marca->id . '&vehicleType=car';
+
+                $client = new Client(); //GuzzleHttp\Client
+                $result = $client->get($url);
+                $arr = json_decode($result->getBody(), true);
+                $arr = $arr['Result'];
+
+                for ($i = 0; $i < count($arr); $i++) {
+                    DB::insert('INSERT INTO `modelo` (`id`, `modelo`, `id_marca`) VALUES (?, ?, ?) 
+                    ON DUPLICATE KEY UPDATE `modelo` = ?', [$arr[$i]['Id'], $arr[$i]['Name'], $marca->id, $arr[$i]['Name']]);
+                }
+            }
+
+            return $this->successResponse();
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function ano(Request $request) {
+        try {
+            $modelos = DB::select("SELECT * FROM `modelo`");
+            
+            foreach ($modelos as $modelo) {
+                $url = 'https://fipe.webmotors.com.br/fipe/vehicle/list/years/?id=' . $modelo->id . '&vehicleType=car';
+
+                $client = new Client(); //GuzzleHttp\Client
+                $result = $client->get($url);
+                $arr = json_decode($result->getBody(), true);
+                $arr = $arr['Result'];
+
+                for ($i = 0; $i < count($arr); $i++) {
+                    DB::insert('INSERT INTO `modelo_ano` (`id_modelo`, `ano`) VALUES (?, ?)', [$modelo->id, $arr[$i]['Id']]);
+                }
+            }
+
+            return $this->successResponse();
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function versao(Request $request) {
+        try {
+            $modelosAno = DB::select("SELECT * FROM `modelo_ano`");
+            
+            foreach ($modelosAno as $modelo_ano) {
+                $url = 'https://fipe.webmotors.com.br/fipe/vehicle/list/versions/?id=' . $modelo_ano->id_modelo . '&year='.$modelo_ano->ano;
+
+                $client = new Client(); //GuzzleHttp\Client
+                $result = $client->get($url);
+                $arr = json_decode($result->getBody(), true);
+                $arr = $arr['Result'];
+
+                for ($i = 0; $i < count($arr); $i++) {
+                    DB::insert('REPLACE INTO `versao` (`id_versao`, `versao`) VALUES (?, ?)', 
+                    [$arr[$i]['Id'], $arr[$i]['Name']]);
+                }
+            }
+
+            return $this->successResponse();
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function versaoAno(Request $request) {
+        try {
+            $modelosAno = DB::select("SELECT * FROM `modelo_ano` where id > 62765");
+            
+            foreach ($modelosAno as $modelo_ano) {
+                $url = 'https://fipe.webmotors.com.br/fipe/vehicle/list/versions/?id=' . $modelo_ano->id_modelo . '&year='.$modelo_ano->ano;
+
+                $client = new Client(); //GuzzleHttp\Client
+                $result = $client->get($url);
+                $arr = json_decode($result->getBody(), true);
+                $arr = $arr['Result'];
+
+                for ($i = 0; $i < count($arr); $i++) {
+                    DB::insert('REPLACE INTO `versao_ano` (`id_versao`, `id_modelo_ano`) VALUES (?, ?)', 
+                    [$arr[$i]['Id'], $modelo_ano->id]);
+                }
+            }
+
+            return $this->successResponse();
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
 }

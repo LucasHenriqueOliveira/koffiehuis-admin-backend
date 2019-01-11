@@ -7,9 +7,15 @@ Route::group([
 ], function ($router) {
 
     Route::post('crawler', 'CrawlerController@process');
+    Route::get('modelo', 'CrawlerController@modelo');
+    Route::get('ano', 'CrawlerController@ano');
+    Route::get('versao', 'CrawlerController@versao');
+    Route::get('versao-ano', 'CrawlerController@versaoAno');
 
     Route::get('marcas', 'MarcasController@getMarcas');
     Route::get('marcas/{id}', 'MarcasController@getModelos');
+    Route::get('anos/{id}', 'MarcasController@getAnos');
+    Route::get('versao/{id}', 'MarcasController@getVersao');
 
     Route::get('manual-options', 'ManualController@getOptions');
 
