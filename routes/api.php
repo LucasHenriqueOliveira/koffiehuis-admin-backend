@@ -25,9 +25,15 @@ Route::group([
     Route::put('manual', 'ManualController@edit');
 
     Route::get('manual-itens', 'ManualController@getItemManual');
+    Route::get('manual-itens/{id}', 'ManualController@getItemManualTitulo');
     Route::post('manual-itens', 'ManualController@saveItemManual');
     Route::delete('manual-itens/{id}', 'ManualController@removeItemManual');
     Route::put('manual-itens', 'ManualController@editItemManual');
+
+    Route::get('manual-itens-fixo', 'ManualController@getItemManualFixo');
+    Route::post('manual-itens-fixo', 'ManualController@saveItemManualFixo');
+    Route::delete('manual-itens-fixo/{id}', 'ManualController@removeItemManualFixo');
+    Route::put('manual-itens-fixo', 'ManualController@editItemManualFixo');
     
     Route::get('manual-item', 'ManualController@getItem');
     Route::post('manual-item', 'ManualController@saveItem');
@@ -36,13 +42,21 @@ Route::group([
 
     Route::post('manual-carro', 'ManualController@saveManualCarro');
     Route::get('manual-carro/{modelo}', 'ManualController@getManualCarro');
-    Route::delete('manual-carro/{id}', 'ManualController@removeManualCarro');
+    Route::delete('manual-carro/{id_marca}/{id_modelo}/{ano}/{id_versao}', 'ManualController@removeManualCarro');
     Route::put('manual-carro', 'ManualController@editManualCarro');
+
+    Route::get('list-manual/{modelo}', 'ManualController@getListManual');
+    Route::get('last-manual', 'ManualController@lastManual');
 
     Route::get('status', 'StatusController@get');
     Route::post('status', 'StatusController@save');
     Route::put('status', 'StatusController@edit');
     Route::delete('status/{id}', 'StatusController@remove');
+
+    Route::get('titulo', 'TituloController@get');
+    Route::post('titulo', 'TituloController@save');
+    Route::put('titulo', 'TituloController@edit');
+    Route::delete('titulo/{id}', 'TituloController@remove');
 
     Route::get('uso', 'UsoController@get');
     Route::post('uso', 'UsoController@save');
