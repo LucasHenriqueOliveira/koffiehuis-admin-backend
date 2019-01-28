@@ -14,18 +14,43 @@ class ManualController extends Controller
     public function save(Request $request) {
         try {
 
-            for($i = 0; $i < count($request->itens); $i++) {
-                DB::insert('INSERT INTO `manual_carro` (`id_manual`, `km`, `tempo`, `id_marca`, `id_modelo`) VALUES (?, ?, ?, ?, ?)', 
-                [$request->itens[$i]['id'], $request->itens[$i]['km'], $request->itens[$i]['meses'], $request->selectedMarca, $request->selectedModelo]);
+            $item = DB::select("SELECT * FROM `manual_carro` 
+                WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ?",
+                [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao]);
+
+            if (count($item)) {
+
+                return response()->json([
+                    'error' => 'Manual já cadastrado para este veículo.'
+                ], Response::HTTP_NOT_FOUND);
+
+            } else {
+                for($i = 0; $i < count($request->itens); $i++) {
+                    DB::insert('INSERT INTO `manual_carro` (`id_manual`, `km_ideal`, `tempo_ideal`, `observacao_ideal`, `km_severo`, `tempo_severo`, `observacao_severo`,
+                        `id_marca`, `id_modelo`, `ano`, `id_versao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                    [$request->itens[$i]['id'], $request->itens[$i]['km_ideal'], $request->itens[$i]['meses_ideal'], $request->itens[$i]['observacao_ideal'],
+                    $request->itens[$i]['km_severo'], $request->itens[$i]['meses_severo'], $request->itens[$i]['observacao_severo'], $request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao]);
+                }
+                DB::insert('REPLACE INTO `observacao` (`id_marca`, `id_modelo`, `ano`, `id_versao`, `observacao`) VALUES (?, ?, ?, ?, ?)', 
+                    [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, $request->observacao]);
+                
+                for($i = 0; $i < count($request->itensFixo); $i++) {
+                    DB::insert('INSERT INTO `manual_carro_fixo` (`id_manual_fixo`, `km_ideal`, `tempo_ideal`, `observacao_ideal`, `km_severo`, `tempo_severo`, `observacao_severo`,
+                        `id_marca`, `id_modelo`, `ano`, `id_versao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                    [$request->itensFixo[$i]['id'], $request->itensFixo[$i]['km_ideal'], $request->itensFixo[$i]['meses_ideal'], $request->itensFixo[$i]['observacao_ideal'],
+                    $request->itensFixo[$i]['km_severo'], $request->itensFixo[$i]['meses_severo'], $request->itensFixo[$i]['observacao_severo'], $request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao]);
+                }
+                return $this->successResponse(null, 'Plano de manutenção inserido com sucesso.');
             }
-            return $this->successResponse(null, 'Plano de manutenção inserido com sucesso.');
+            
         } catch (Exception $e) {
             return $this->failedResponse();
         }
     }
 
     public function get(Request $request) {
-        return DB::select("SELECT `manual`.`id`, `manual`.`item`, `manual_carro`.`km`, `manual_carro`.`tempo`, 
+        return DB::select("SELECT `manual`.`id`, `manual`.`item`, `manual_carro`.`km_ideal`, `manual_carro`.`tempo_ideal`, `manual_carro`.`observacao_ideal`,
+            `manual_carro`.`km_severo`, `manual_carro`.`tempo_severo`, `manual_carro`.`observacao_severo`,
             `modelos`.`nome` as `modelo`, `marcas`.`nome` as `marca`, `modelos`.`id` as `id_modelo`, 
             `marcas`.`id` as `id_marca`, `manual_carro`.`id` as `id_manual_carro` 
         FROM `manual` AS `manual` 
@@ -72,12 +97,18 @@ class ManualController extends Controller
     // ITEM DO MANUAL -------------------------------------
 
     public function getItemManual(Request $request) {
-        return DB::select("SELECT `id`, `item` FROM `manual` WHERE `active` = 1");
+        return DB::select("SELECT `m`.`id`, `m`.`item`, `m`.`id_titulo`, `t`.`titulo` FROM `manual` AS `m`
+            INNER JOIN `titulo` AS `t` ON `m`.`id_titulo` = `t`.`id`
+            WHERE `m`.`active` = 1");
+    }
+
+    public function getItemManualTitulo(Request $request, $id) {
+        return DB::select("SELECT `id`, `item`, `id_titulo` FROM `manual` WHERE `id_titulo` = ?", [$id]);
     }
 
     public function saveItemManual(Request $request) {
         try {
-            DB::insert('INSERT INTO `manual` (`item`) VALUES (?)', [$request->item]);
+            DB::insert('INSERT INTO `manual` (`item`, `id_titulo`) VALUES (?, ?)', [$request->item, $request->selectedTitulo]);
             $list = $this->getItemManual($request);
 
             return $this->successResponse($list, 'Item inserido com sucesso.');
@@ -108,6 +139,46 @@ class ManualController extends Controller
         }
     }
 
+
+    // ITEM DO MANUAL FIXO -------------------------------------
+
+    public function getItemManualFixo(Request $request) {
+        return DB::select("SELECT * FROM `manual_fixo` WHERE `active` = 1");
+    }
+
+    public function saveItemManualFixo(Request $request) {
+        try {
+            DB::insert('INSERT INTO `manual_fixo` (`item`) VALUES (?)', [$request->item]);
+            $list = $this->getItemManualFixo($request);
+
+            return $this->successResponse($list, 'Item inserido com sucesso.');
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function removeItemManualFixo(Request $request, $id) {
+        try {
+            DB::update('UPDATE `manual_fixo` SET `active` = 0 WHERE id = ?', [$request->id]);
+            $list = $this->getItemManualFixo($request);
+            $message = 'Item deletado com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function editItemManualFixo(Request $request) {
+        try {
+            DB::update('UPDATE `manual_fixo` SET `item` = ? WHERE id = ?', [$request->item, $request->id]);
+            $list = $this->getItemManualFixo($request);
+            $message = 'Item alterado com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
     // MANUAL CARRO -----------------------------
 
     public function saveManualCarro(Request $request) {
@@ -131,11 +202,12 @@ class ManualController extends Controller
          WHERE `manual_carro`.`id_modelo` = ? AND `manual_carro`.`active` = 1 AND `manual`.`active` = 1", [$modelo]);
     }
 
-    public function removeManualCarro(Request $request, $id) {
+    public function removeManualCarro(Request $request, $id_marca, $id_modelo, $ano, $id_versao) {
         try {
-            $veiculo = DB::select("SELECT `id_modelo` FROM `manual_carro` WHERE `id` = ?", [$request->id]);
-            DB::update('UPDATE `manual_carro` SET `active` = 0 WHERE id = ?', [$request->id]);
-            $list = $this->getManualCarro($request, $veiculo[0]->id_modelo);
+            DB::update('UPDATE `manual_carro` SET `active` = 0 WHERE `id_marca` = ? AND `id_modelo` = ?
+                AND `ano` = ? AND `id_versao` = ?', [$id_marca, $id_modelo, $ano, $id_versao]);
+            
+            $list = $this->getListManual($request, $id_modelo);
             $message = 'Item deletado com sucesso.';
             return $this->successResponse($list, $message);
         } catch (Exception $e) {
@@ -201,6 +273,32 @@ class ManualController extends Controller
     public function getOptions(Request $request) {
         return DB::select("SELECT `id`, `item` FROM `manual` WHERE `active` = 1");
     }
+
+
+    // LAST MANUAL -------------------------------
+
+    public function lastManual(Request $request) {
+        return DB::select("SELECT `mc`.`id_marca`, `ma`.`marca`, `mc`.`id_modelo`, `mo`.`modelo`, `mc`.`ano`, `mc`.`id_versao`, `v`.`versao`
+            FROM `manual_carro` AS `mc` INNER JOIN `versao` AS `v` ON `mc`.`id_versao` = `v`.`id_versao`
+            INNER JOIN `marca` AS `ma` ON `mc`.`id_marca` = `ma`.`id`
+            INNER JOIN `modelo` AS `mo` ON `mc`.`id_modelo` = `mo`.`id`
+            WHERE `mc`.`active` = 1 
+            GROUP BY `mc`.`id_versao` 
+            ORDER BY `mc`.`id` DESC 
+            LIMIT 10");
+    }
+
+    // LIST MANUAL -------------------------------
+
+    public function getListManual(Request $request, $modelo) {
+        return DB::select("SELECT `mc`.`id_marca`, `ma`.`marca`, `mc`.`id_modelo`, `mo`.`modelo`, `mc`.`ano`, `mc`.`id_versao`, `v`.`versao`
+            FROM `manual_carro` AS `mc` INNER JOIN `versao` AS `v` ON `mc`.`id_versao` = `v`.`id_versao`
+            INNER JOIN `marca` AS `ma` ON `mc`.`id_marca` = `ma`.`id`
+            INNER JOIN `modelo` AS `mo` ON `mc`.`id_modelo` = `mo`.`id`
+            WHERE `mc`.`active` = 1 AND `mc`.`id_modelo` = ? GROUP BY `mc`.`ano`,`mc`.`id_versao` 
+            ORDER BY `mc`.`id` DESC", [$modelo]);
+    }
+
 
     public function failedResponse(){
         return response()->json([
