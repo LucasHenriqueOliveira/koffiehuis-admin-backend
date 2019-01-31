@@ -194,12 +194,76 @@ class ManualController extends Controller
         }
     }
 
-    public function getManualCarro(Request $request, $modelo) {
-        return DB::select("SELECT `manual_carro`.`id`, `manual`.`item`, `manual_carro`.`id_modelo`, `manual_carro`.`id_manual`,
-            `manual_carro`.`km`, `manual_carro`.`tempo`
-            FROM `manual_carro`
-            INNER JOIN `manual` ON `manual_carro`.`id_manual` = `manual`.`id`
-         WHERE `manual_carro`.`id_modelo` = ? AND `manual_carro`.`active` = 1 AND `manual`.`active` = 1", [$modelo]);
+    public function getManualCarro(Request $request, $marca, $modelo, $ano, $versao) {
+        
+        try {
+            $arr = array();
+            $arrItems = array();
+
+            $manual = DB::select("SELECT `manual_carro`.`id`, `manual`.`item`, `manual_carro`.`id_manual`,
+                `manual_carro`.`km_ideal`, `manual_carro`.`tempo_ideal`, `manual_carro`.`observacao_ideal`,
+                `manual_carro`.`km_severo`, `manual_carro`.`tempo_severo`, `manual_carro`.`observacao_severo`,
+                `titulo`.`titulo`, `manual`.`id_titulo`
+                FROM `manual_carro`
+                INNER JOIN `manual` ON `manual_carro`.`id_manual` = `manual`.`id`
+                INNER JOIN `titulo` ON `manual`.`id_titulo` = `titulo`.`id`
+             WHERE `manual_carro`.`id_marca` = ? AND `manual_carro`.`id_modelo` = ? AND 
+             `manual_carro`.`ano` = ? AND `manual_carro`.`id_versao` = ? AND `manual_carro`.`active` = 1", [$marca, $modelo, $ano, $versao]);
+        
+
+            for ($i = 0; $i < count($manual); $i++) {
+                if (count($arrItems)) {
+                    $tituloExist = false;
+                    for ($j = 0; $j < count($arrItems); $j++) {
+                        if ($arrItems[$j]['titulo'] === $manual[$i]->id_titulo) {
+                            array_push($arrItems[$j]['items'], $manual[$i]);
+                            $tituloExist = true;
+                            break;
+                        }
+                    }
+                    if (!$tituloExist) {
+                        $arrItem = array();
+                        $arrItem['titulo'] = $manual[$i]->id_titulo;
+                        $arrItem['txtTitulo'] = $manual[$i]->titulo;
+                        $arrItem['items'] = [$manual[$i]];
+                        array_push($arrItems, $arrItem);
+                    }
+                } else {
+                    $arrItem = array();
+                    $arrItem['titulo'] = $manual[$i]->id_titulo;
+                    $arrItem['txtTitulo'] = $manual[$i]->titulo;
+                    $arrItem['items'] = [$manual[$i]];
+                    array_push($arrItems, $arrItem);
+                }
+            }
+
+            $arr['manual'] = $arrItems;
+
+            $manual_fixo = DB::select("SELECT `manual_carro_fixo`.`id`, `manual_fixo`.`item`, `manual_carro_fixo`.`id_manual_fixo`,
+                `manual_carro_fixo`.`km_ideal`, `manual_carro_fixo`.`tempo_ideal`, `manual_carro_fixo`.`observacao_ideal`,
+                `manual_carro_fixo`.`km_severo`, `manual_carro_fixo`.`tempo_severo`, `manual_carro_fixo`.`observacao_severo`
+                FROM `manual_carro_fixo`
+                INNER JOIN `manual_fixo` ON `manual_carro_fixo`.`id_manual_fixo` = `manual_fixo`.`id`
+             WHERE `manual_carro_fixo`.`id_marca` = ? AND `manual_carro_fixo`.`id_modelo` = ? AND 
+             `manual_carro_fixo`.`ano` = ? AND `manual_carro_fixo`.`id_versao` = ? AND `manual_carro_fixo`.`active` = 1", [$marca, $modelo, $ano, $versao]);
+
+            $arr['manual_fixo'] = $manual_fixo;
+
+
+            $observacao = DB::select("SELECT `observacao` FROM `observacao`
+             WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ?", [$marca, $modelo, $ano, $versao]);
+            
+            $arr['observacao'] = '';
+
+            if(count($observacao)) {
+                $arr['observacao'] = $observacao[0]->observacao;
+            }
+
+            return $arr;
+
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
     }
 
     public function removeManualCarro(Request $request, $id_marca, $id_modelo, $ano, $id_versao) {
@@ -217,10 +281,26 @@ class ManualController extends Controller
 
     public function editManualCarro(Request $request) {
         try {
-            $veiculo = DB::select("SELECT `id_modelo` FROM `manual_carro` WHERE `id` = ?", [$request->id]);
-            DB::update('UPDATE `manual_carro` SET `id_manual` = ?, `km` = ?, `tempo` = ? 
-                WHERE id = ?', [$request->id_manual, $request->km, $request->tempo, $request->id]);
-            $list = $this->getManualCarro($request, $veiculo[0]->id_modelo);
+
+            for ($i = 0; $i < count($request->itens); $i++) {
+                DB::update('UPDATE `manual_carro` SET `km_ideal` = ?, `tempo_ideal` = ?, `observacao_ideal` = ?,
+                    `km_severo` = ?, `tempo_severo` = ?, `observacao_severo` = ?
+                WHERE id = ?', [$request->itens[$i]['km_ideal'], $request->itens[$i]['meses_ideal'], $request->itens[$i]['observacao_ideal'], 
+                $request->itens[$i]['km_severo'], $request->itens[$i]['meses_severo'], $request->itens[$i]['observacao_severo'], $request->itens[$i]['id']]);
+            }
+
+            for ($i = 0; $i < count($request->itensFixo); $i++) {
+                DB::update('UPDATE `manual_carro_fixo` SET `km_ideal` = ?, `tempo_ideal` = ?, `observacao_ideal` = ?,
+                    `km_severo` = ?, `tempo_severo` = ?, `observacao_severo` = ?
+                WHERE id = ?', [$request->itensFixo[$i]['km_ideal'], $request->itensFixo[$i]['meses_ideal'], $request->itensFixo[$i]['observacao_ideal'], 
+                $request->itensFixo[$i]['km_severo'], $request->itensFixo[$i]['meses_severo'], $request->itensFixo[$i]['observacao_severo'], $request->itens[$i]['id']]);
+            }
+            
+            DB::update('UPDATE `observacao` SET `observacao` = ? 
+                WHERE id_marca = ? AND id_modelo = ? AND ano = ? AND id_versao = ?', 
+                [$request->observacao, $request->marca, $request->modelo, $request->ano, $request->versao]);
+            
+            $list = [];
             $message = 'Item alterado com sucesso.';
             return $this->successResponse($list, $message);
         } catch (Exception $e) {
