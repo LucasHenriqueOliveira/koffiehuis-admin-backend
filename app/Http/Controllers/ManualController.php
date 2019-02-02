@@ -49,8 +49,8 @@ class ManualController extends Controller
     }
 
     public function get(Request $request) {
-        return DB::select("SELECT `manual`.`id`, `manual`.`item`, `manual_carro`.`km_ideal`, `manual_carro`.`tempo_ideal`, `manual_carro`.`observacao_ideal`,
-            `manual_carro`.`km_severo`, `manual_carro`.`tempo_severo`, `manual_carro`.`observacao_severo`,
+        return DB::select("SELECT `manual`.`id`, `manual_carro`.`id_manual`, `manual`.`item`, `manual_carro`.`km_ideal`, `manual_carro`.`tempo_ideal` AS `meses_ideal`, `manual_carro`.`observacao_ideal`,
+            `manual_carro`.`km_severo`, `manual_carro`.`tempo_severo` AS `meses_severo`, `manual_carro`.`observacao_severo`,
             `modelos`.`nome` as `modelo`, `marcas`.`nome` as `marca`, `modelos`.`id` as `id_modelo`, 
             `marcas`.`id` as `id_marca`, `manual_carro`.`id` as `id_manual_carro` 
         FROM `manual` AS `manual` 
@@ -181,28 +181,15 @@ class ManualController extends Controller
 
     // MANUAL CARRO -----------------------------
 
-    public function saveManualCarro(Request $request) {
-        try {
-
-            for($i = 0; $i < count($request->itens); $i++) {
-                DB::insert('INSERT INTO `manual_carro` (`id_manual`, `km`, `tempo`, `id_marca`, `id_modelo`) VALUES (?, ?, ?, ?, ?)', 
-                [$request->itens[$i]['id_manual'], $request->itens[$i]['km'], $request->itens[$i]['tempo'], $request->selectedMarca, $request->selectedModelo]);
-            }
-            return $this->successResponse(null, 'Cópia realizada com sucesso.');
-        } catch (Exception $e) {
-            return $this->failedResponse();
-        }
-    }
-
     public function getManualCarro(Request $request, $marca, $modelo, $ano, $versao) {
         
         try {
             $arr = array();
             $arrItems = array();
 
-            $manual = DB::select("SELECT `manual_carro`.`id`, `manual`.`item`, `manual_carro`.`id_manual`,
-                `manual_carro`.`km_ideal`, `manual_carro`.`tempo_ideal`, `manual_carro`.`observacao_ideal`,
-                `manual_carro`.`km_severo`, `manual_carro`.`tempo_severo`, `manual_carro`.`observacao_severo`,
+            $manual = DB::select("SELECT `manual_carro`.`id_manual` AS `id`, `manual`.`item`, `manual_carro`.`id_manual`,
+                `manual_carro`.`km_ideal`, `manual_carro`.`tempo_ideal` AS `meses_ideal`, `manual_carro`.`observacao_ideal`,
+                `manual_carro`.`km_severo`, `manual_carro`.`tempo_severo` AS `meses_severo`, `manual_carro`.`observacao_severo`,
                 `titulo`.`titulo`, `manual`.`id_titulo`
                 FROM `manual_carro`
                 INNER JOIN `manual` ON `manual_carro`.`id_manual` = `manual`.`id`
@@ -239,9 +226,9 @@ class ManualController extends Controller
 
             $arr['manual'] = $arrItems;
 
-            $manual_fixo = DB::select("SELECT `manual_carro_fixo`.`id`, `manual_fixo`.`item`, `manual_carro_fixo`.`id_manual_fixo`,
-                `manual_carro_fixo`.`km_ideal`, `manual_carro_fixo`.`tempo_ideal`, `manual_carro_fixo`.`observacao_ideal`,
-                `manual_carro_fixo`.`km_severo`, `manual_carro_fixo`.`tempo_severo`, `manual_carro_fixo`.`observacao_severo`
+            $manual_fixo = DB::select("SELECT `manual_carro_fixo`.`id_manual_fixo` AS `id`, `manual_fixo`.`item`, `manual_carro_fixo`.`id_manual_fixo`,
+                `manual_carro_fixo`.`km_ideal`, `manual_carro_fixo`.`tempo_ideal` AS `meses_ideal`, `manual_carro_fixo`.`observacao_ideal`,
+                `manual_carro_fixo`.`km_severo`, `manual_carro_fixo`.`tempo_severo` AS `meses_severo`, `manual_carro_fixo`.`observacao_severo`
                 FROM `manual_carro_fixo`
                 INNER JOIN `manual_fixo` ON `manual_carro_fixo`.`id_manual_fixo` = `manual_fixo`.`id`
              WHERE `manual_carro_fixo`.`id_marca` = ? AND `manual_carro_fixo`.`id_modelo` = ? AND 
@@ -285,15 +272,17 @@ class ManualController extends Controller
             for ($i = 0; $i < count($request->itens); $i++) {
                 DB::update('UPDATE `manual_carro` SET `km_ideal` = ?, `tempo_ideal` = ?, `observacao_ideal` = ?,
                     `km_severo` = ?, `tempo_severo` = ?, `observacao_severo` = ?
-                WHERE id = ?', [$request->itens[$i]['km_ideal'], $request->itens[$i]['meses_ideal'], $request->itens[$i]['observacao_ideal'], 
-                $request->itens[$i]['km_severo'], $request->itens[$i]['meses_severo'], $request->itens[$i]['observacao_severo'], $request->itens[$i]['id']]);
+                WHERE id_manual = ? AND id_marca = ? AND id_modelo = ? AND ano = ? AND id_versao = ?', [$request->itens[$i]['km_ideal'], $request->itens[$i]['meses_ideal'], $request->itens[$i]['observacao_ideal'], 
+                $request->itens[$i]['km_severo'], $request->itens[$i]['meses_severo'], $request->itens[$i]['observacao_severo'], $request->itens[$i]['id'], 
+                $request->marca, $request->modelo, $request->ano, $request->versao]);
             }
-
-            for ($i = 0; $i < count($request->itensFixo); $i++) {
+           
+            for ($m = 0; $m < count($request->itensFixo); $m++) {
                 DB::update('UPDATE `manual_carro_fixo` SET `km_ideal` = ?, `tempo_ideal` = ?, `observacao_ideal` = ?,
                     `km_severo` = ?, `tempo_severo` = ?, `observacao_severo` = ?
-                WHERE id = ?', [$request->itensFixo[$i]['km_ideal'], $request->itensFixo[$i]['meses_ideal'], $request->itensFixo[$i]['observacao_ideal'], 
-                $request->itensFixo[$i]['km_severo'], $request->itensFixo[$i]['meses_severo'], $request->itensFixo[$i]['observacao_severo'], $request->itens[$i]['id']]);
+                WHERE id_manual_fixo = ? AND id_marca = ? AND id_modelo = ? AND ano = ? AND id_versao = ?', [$request->itensFixo[$m]['km_ideal'], $request->itensFixo[$m]['meses_ideal'], $request->itensFixo[$m]['observacao_ideal'], 
+                $request->itensFixo[$m]['km_severo'], $request->itensFixo[$m]['meses_severo'], $request->itensFixo[$m]['observacao_severo'], $request->itensFixo[$m]['id'], 
+                $request->marca, $request->modelo, $request->ano, $request->versao]);
             }
             
             DB::update('UPDATE `observacao` SET `observacao` = ? 
@@ -363,7 +352,7 @@ class ManualController extends Controller
             INNER JOIN `marca` AS `ma` ON `mc`.`id_marca` = `ma`.`id`
             INNER JOIN `modelo` AS `mo` ON `mc`.`id_modelo` = `mo`.`id`
             WHERE `mc`.`active` = 1 
-            GROUP BY `mc`.`id_versao` 
+            GROUP BY `mc`.`id_marca`,`mc`.`id_modelo`, `mc`.`ano`, `mc`.`id_versao`
             ORDER BY `mc`.`id` DESC 
             LIMIT 10");
     }
