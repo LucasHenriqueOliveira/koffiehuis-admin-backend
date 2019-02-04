@@ -40,7 +40,6 @@ Route::group([
     Route::delete('manual-item/{id}', 'ManualController@removeItem');
     Route::put('manual-item', 'ManualController@editItem');
 
-    Route::post('manual-carro', 'ManualController@saveManualCarro');
     Route::get('manual-carro/{id_marca}/{id_modelo}/{ano}/{id_versao}', 'ManualController@getManualCarro');
     Route::delete('manual-carro/{id_marca}/{id_modelo}/{ano}/{id_versao}', 'ManualController@removeManualCarro');
     Route::put('manual-carro', 'ManualController@editManualCarro');
