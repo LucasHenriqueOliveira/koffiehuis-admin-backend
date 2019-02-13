@@ -57,6 +57,11 @@ Route::group([
     Route::put('titulo', 'TituloController@edit');
     Route::delete('titulo/{id}', 'TituloController@remove');
 
+    Route::get('titulo-fixo', 'TituloFixoController@get');
+    Route::post('titulo-fixo', 'TituloFixoController@save');
+    Route::put('titulo-fixo', 'TituloFixoController@edit');
+    Route::delete('titulo-fixo/{id}', 'TituloFixoController@remove');
+
     Route::get('uso', 'UsoController@get');
     Route::post('uso', 'UsoController@save');
     Route::put('uso', 'UsoController@edit');

@@ -143,12 +143,19 @@ class ManualController extends Controller
     // ITEM DO MANUAL FIXO -------------------------------------
 
     public function getItemManualFixo(Request $request) {
-        return DB::select("SELECT * FROM `manual_fixo` WHERE `active` = 1");
+        return DB::select("SELECT `m`.`id`, `m`.`item`, `m`.`id_titulo`, `t`.`titulo`,
+            `m`.`km_ideal`, `m`.`tempo_ideal`, `m`.`observacao_ideal`, `m`.`km_severo`, `m`.`tempo_severo`, `m`.`observacao_severo`
+            FROM `manual_fixo` AS `m`
+            INNER JOIN `titulo_fixo` AS `t` ON `m`.`id_titulo` = `t`.`id`
+            WHERE `m`.`active` = 1");
     }
 
     public function saveItemManualFixo(Request $request) {
         try {
-            DB::insert('INSERT INTO `manual_fixo` (`item`) VALUES (?)', [$request->item]);
+            DB::insert('INSERT INTO `manual_fixo` (`item`, `id_titulo`, 
+                `km_ideal`, `tempo_ideal`, `observacao_ideal`, `km_severo`, `tempo_severo`, `observacao_severo`) 
+            VALUES (?,?,?,?,?,?,?,?)', [$request->item, $request->selectedTitulo, $request->km_ideal, $request->meses_ideal,
+            $request->observacao_ideal, $request->km_severo, $request->meses_severo, $request->observacao_severo]);
             $list = $this->getItemManualFixo($request);
 
             return $this->successResponse($list, 'Item inserido com sucesso.');
@@ -170,7 +177,11 @@ class ManualController extends Controller
 
     public function editItemManualFixo(Request $request) {
         try {
-            DB::update('UPDATE `manual_fixo` SET `item` = ? WHERE id = ?', [$request->item, $request->id]);
+            DB::update('UPDATE `manual_fixo` SET `item` = ?, 
+                `km_ideal` = ?, `tempo_ideal` = ?, `observacao_ideal` = ?,
+                `km_severo` = ?, `tempo_severo` = ?, `observacao_severo` = ? WHERE id = ?',
+                [$request->item, $request->km_ideal, $request->meses_ideal, $request->observacao_ideal, 
+                $request->km_severo, $request->meses_severo, $request->observacao_severo, $request->id]);
             $list = $this->getItemManualFixo($request);
             $message = 'Item alterado com sucesso.';
             return $this->successResponse($list, $message);
