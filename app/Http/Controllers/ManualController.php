@@ -34,12 +34,6 @@ class ManualController extends Controller
                 DB::insert('REPLACE INTO `observacao` (`id_marca`, `id_modelo`, `ano`, `id_versao`, `observacao`) VALUES (?, ?, ?, ?, ?)', 
                     [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, $request->observacao]);
                 
-                for($i = 0; $i < count($request->itensFixo); $i++) {
-                    DB::insert('INSERT INTO `manual_carro_fixo` (`id_manual_fixo`, `km_ideal`, `tempo_ideal`, `observacao_ideal`, `km_severo`, `tempo_severo`, `observacao_severo`,
-                        `id_marca`, `id_modelo`, `ano`, `id_versao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-                    [$request->itensFixo[$i]['id'], $request->itensFixo[$i]['km_ideal'], $request->itensFixo[$i]['meses_ideal'], $request->itensFixo[$i]['observacao_ideal'],
-                    $request->itensFixo[$i]['km_severo'], $request->itensFixo[$i]['meses_severo'], $request->itensFixo[$i]['observacao_severo'], $request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao]);
-                }
                 return $this->successResponse(null, 'Plano de manutenção inserido com sucesso.');
             }
             
@@ -143,11 +137,42 @@ class ManualController extends Controller
     // ITEM DO MANUAL FIXO -------------------------------------
 
     public function getItemManualFixo(Request $request) {
-        return DB::select("SELECT `m`.`id`, `m`.`item`, `m`.`id_titulo`, `t`.`titulo`,
+
+        $arrItems = array();
+
+        $manual = DB::select("SELECT `m`.`id`, `m`.`item`, `m`.`id_titulo`, `t`.`titulo`,
             `m`.`km_ideal`, `m`.`tempo_ideal`, `m`.`observacao_ideal`, `m`.`km_severo`, `m`.`tempo_severo`, `m`.`observacao_severo`
             FROM `manual_fixo` AS `m`
             INNER JOIN `titulo_fixo` AS `t` ON `m`.`id_titulo` = `t`.`id`
             WHERE `m`.`active` = 1");
+
+        for ($i = 0; $i < count($manual); $i++) {
+            if (count($arrItems)) {
+                $tituloExist = false;
+                for ($j = 0; $j < count($arrItems); $j++) {
+                    if ($arrItems[$j]['titulo'] === $manual[$i]->id_titulo) {
+                        array_push($arrItems[$j]['items'], $manual[$i]);
+                        $tituloExist = true;
+                        break;
+                    }
+                }
+                if (!$tituloExist) {
+                    $arrItem = array();
+                    $arrItem['titulo'] = $manual[$i]->id_titulo;
+                    $arrItem['txtTitulo'] = $manual[$i]->titulo;
+                    $arrItem['items'] = [$manual[$i]];
+                    array_push($arrItems, $arrItem);
+                }
+            } else {
+                $arrItem = array();
+                $arrItem['titulo'] = $manual[$i]->id_titulo;
+                $arrItem['txtTitulo'] = $manual[$i]->titulo;
+                $arrItem['items'] = [$manual[$i]];
+                array_push($arrItems, $arrItem);
+            }
+        }
+
+       return $arrItems;
     }
 
     public function saveItemManualFixo(Request $request) {
@@ -236,16 +261,7 @@ class ManualController extends Controller
             }
 
             $arr['manual'] = $arrItems;
-
-            $manual_fixo = DB::select("SELECT `manual_carro_fixo`.`id_manual_fixo` AS `id`, `manual_fixo`.`item`, `manual_carro_fixo`.`id_manual_fixo`,
-                `manual_carro_fixo`.`km_ideal`, `manual_carro_fixo`.`tempo_ideal` AS `meses_ideal`, `manual_carro_fixo`.`observacao_ideal`,
-                `manual_carro_fixo`.`km_severo`, `manual_carro_fixo`.`tempo_severo` AS `meses_severo`, `manual_carro_fixo`.`observacao_severo`
-                FROM `manual_carro_fixo`
-                INNER JOIN `manual_fixo` ON `manual_carro_fixo`.`id_manual_fixo` = `manual_fixo`.`id`
-             WHERE `manual_carro_fixo`.`id_marca` = ? AND `manual_carro_fixo`.`id_modelo` = ? AND 
-             `manual_carro_fixo`.`ano` = ? AND `manual_carro_fixo`.`id_versao` = ? AND `manual_carro_fixo`.`active` = 1", [$marca, $modelo, $ano, $versao]);
-
-            $arr['manual_fixo'] = $manual_fixo;
+            $arr['manual_fixo'] = $this->getItemManualFixo($request);
 
 
             $observacao = DB::select("SELECT `observacao` FROM `observacao`
@@ -285,14 +301,6 @@ class ManualController extends Controller
                     `km_severo` = ?, `tempo_severo` = ?, `observacao_severo` = ?
                 WHERE id_manual = ? AND id_marca = ? AND id_modelo = ? AND ano = ? AND id_versao = ?', [$request->itens[$i]['km_ideal'], $request->itens[$i]['meses_ideal'], $request->itens[$i]['observacao_ideal'], 
                 $request->itens[$i]['km_severo'], $request->itens[$i]['meses_severo'], $request->itens[$i]['observacao_severo'], $request->itens[$i]['id'], 
-                $request->marca, $request->modelo, $request->ano, $request->versao]);
-            }
-           
-            for ($m = 0; $m < count($request->itensFixo); $m++) {
-                DB::update('UPDATE `manual_carro_fixo` SET `km_ideal` = ?, `tempo_ideal` = ?, `observacao_ideal` = ?,
-                    `km_severo` = ?, `tempo_severo` = ?, `observacao_severo` = ?
-                WHERE id_manual_fixo = ? AND id_marca = ? AND id_modelo = ? AND ano = ? AND id_versao = ?', [$request->itensFixo[$m]['km_ideal'], $request->itensFixo[$m]['meses_ideal'], $request->itensFixo[$m]['observacao_ideal'], 
-                $request->itensFixo[$m]['km_severo'], $request->itensFixo[$m]['meses_severo'], $request->itensFixo[$m]['observacao_severo'], $request->itensFixo[$m]['id'], 
                 $request->marca, $request->modelo, $request->ano, $request->versao]);
             }
             
