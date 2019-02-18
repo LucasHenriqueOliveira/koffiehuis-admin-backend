@@ -42,6 +42,51 @@ class ManualController extends Controller
         }
     }
 
+    public function copy(Request $request) {
+        try {
+
+            $item = DB::select("SELECT * FROM `manual_carro` 
+                WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ?",
+                [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao]);
+
+            if (count($item)) {
+
+                return response()->json([
+                    'error' => 'Manual já cadastrado para este veículo.'
+                ], Response::HTTP_NOT_FOUND);
+
+            } else {
+
+                $manual = DB::select("SELECT `manual_carro`.`id_manual` AS `id`, `manual`.`item`, `manual_carro`.`id_manual`,
+                    `manual_carro`.`km_ideal`, `manual_carro`.`tempo_ideal` AS `meses_ideal`, `manual_carro`.`observacao_ideal`,
+                    `manual_carro`.`km_severo`, `manual_carro`.`tempo_severo` AS `meses_severo`, `manual_carro`.`observacao_severo`,
+                    `titulo`.`titulo`, `manual`.`id_titulo`
+                    FROM `manual_carro`
+                    INNER JOIN `manual` ON `manual_carro`.`id_manual` = `manual`.`id`
+                    INNER JOIN `titulo` ON `manual`.`id_titulo` = `titulo`.`id`
+                 WHERE `manual_carro`.`id_marca` = ? AND `manual_carro`.`id_modelo` = ? AND 
+                 `manual_carro`.`ano` = ? AND `manual_carro`.`id_versao` = ? AND `manual_carro`.`active` = 1", [$request->marcaAntigo, 
+                    $request->modeloAntigo, $request->anoAntigo, $request->versaoAntigo]);
+
+                for ($i = 0; $i < count($manual); $i++) {
+                    DB::insert('INSERT INTO `manual_carro` (`id_manual`, `km_ideal`, `tempo_ideal`, `observacao_ideal`, `km_severo`, `tempo_severo`, `observacao_severo`,
+                            `id_marca`, `id_modelo`, `ano`, `id_versao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                        [$manual[$i]->id, $manual[$i]->km_ideal, $manual[$i]->meses_ideal,
+                        $manual[$i]->observacao_ideal, $manual[$i]->km_severo,
+                        $manual[$i]->meses_severo, $manual[$i]->observacao_severo,
+                        $request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao]);
+                }
+                DB::insert('REPLACE INTO `observacao` (`id_marca`, `id_modelo`, `ano`, `id_versao`, `observacao`) VALUES (?, ?, ?, ?, ?)', 
+                    [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, $request->observacao]);
+                
+                return $this->successResponse(null, 'Plano de manutenção inserido com sucesso.');
+            }
+            
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
     public function get(Request $request) {
         return DB::select("SELECT `manual`.`id`, `manual_carro`.`id_manual`, `manual`.`item`, `manual_carro`.`km_ideal`, `manual_carro`.`tempo_ideal` AS `meses_ideal`, `manual_carro`.`observacao_ideal`,
             `manual_carro`.`km_severo`, `manual_carro`.`tempo_severo` AS `meses_severo`, `manual_carro`.`observacao_severo`,
@@ -175,6 +220,15 @@ class ManualController extends Controller
        return $arrItems;
     }
 
+    public function itemManualFixo(Request $request) {
+        return DB::select("SELECT `m`.`id`, `m`.`item`, `m`.`id_titulo`, 
+            `m`.`km_ideal`, `m`.`tempo_ideal`, `m`.`observacao_ideal`,
+            `m`.`km_severo`, `m`.`tempo_severo`, `m`.`observacao_severo`,
+            `t`.`titulo` FROM `manual_fixo` AS `m`
+            INNER JOIN `titulo_fixo` AS `t` ON `m`.`id_titulo` = `t`.`id`
+            WHERE `m`.`active` = 1");
+    }
+
     public function saveItemManualFixo(Request $request) {
         try {
             DB::insert('INSERT INTO `manual_fixo` (`item`, `id_titulo`, 
@@ -216,6 +270,39 @@ class ManualController extends Controller
     }
 
     // MANUAL CARRO -----------------------------
+
+    public function listManualCarro(Request $request) {
+        $marca = '';
+        $modelo = '';
+        $ano = '';
+        $versao = '';
+
+        if ($request->selectedMarca) {
+            $marca = ' AND `mc`.`id_marca` ='.$request->selectedMarca;
+        }
+
+        if ($request->selectedModelo) {
+            $modelo = ' AND `mc`.`id_modelo` ='.$request->selectedModelo;
+        }
+
+        if ($request->selectedAno) {
+            $ano = ' AND `mc`.`ano` ='.$request->selectedAno;
+        }
+
+        if ($request->selectedVersao) {
+            $versao = ' AND `mc`.`id_versao` ='.$request->selectedVersao;
+        }
+
+        return DB::select("SELECT `mc`.`id_marca`, `ma`.`marca`, `mc`.`id_modelo`, `mo`.`modelo`, `mc`.`ano` as `id_ano`, `m_ano`.`ano` as `ano`, `mc`.`id_versao`, `v`.`versao`
+            FROM `manual_carro` AS `mc` INNER JOIN `versao` AS `v` ON `mc`.`id_versao` = `v`.`id_versao`
+            INNER JOIN `marca` AS `ma` ON `mc`.`id_marca` = `ma`.`id`
+            INNER JOIN `modelo` AS `mo` ON `mc`.`id_modelo` = `mo`.`id`
+            INNER JOIN `modelo_ano` AS `m_ano` ON `mc`.`ano` = `m_ano`.`id`
+            WHERE `mc`.`active` = 1 $marca $modelo $ano $versao GROUP BY `mc`.`ano`,`mc`.`id_versao` 
+            ORDER BY `mc`.`id` DESC");
+        
+
+    }
 
     public function getManualCarro(Request $request, $marca, $modelo, $ano, $versao) {
         
@@ -366,10 +453,11 @@ class ManualController extends Controller
     // LAST MANUAL -------------------------------
 
     public function lastManual(Request $request) {
-        return DB::select("SELECT `mc`.`id_marca`, `ma`.`marca`, `mc`.`id_modelo`, `mo`.`modelo`, `mc`.`ano`, `mc`.`id_versao`, `v`.`versao`
+        return DB::select("SELECT `mc`.`id_marca`, `ma`.`marca`, `mc`.`id_modelo`, `mo`.`modelo`, `mc`.`ano` as `id_ano`, `m_ano`.`ano` as `ano`, `mc`.`id_versao`, `v`.`versao`
             FROM `manual_carro` AS `mc` INNER JOIN `versao` AS `v` ON `mc`.`id_versao` = `v`.`id_versao`
             INNER JOIN `marca` AS `ma` ON `mc`.`id_marca` = `ma`.`id`
             INNER JOIN `modelo` AS `mo` ON `mc`.`id_modelo` = `mo`.`id`
+            INNER JOIN `modelo_ano` AS `m_ano` ON `mc`.`ano` = `m_ano`.`id`
             WHERE `mc`.`active` = 1 
             GROUP BY `mc`.`id_marca`,`mc`.`id_modelo`, `mc`.`ano`, `mc`.`id_versao`
             ORDER BY `mc`.`id` DESC 

@@ -31,6 +31,7 @@ Route::group([
     Route::put('manual-itens', 'ManualController@editItemManual');
 
     Route::get('manual-itens-fixo', 'ManualController@getItemManualFixo');
+    Route::get('manual-itens-fixo-titulo', 'ManualController@itemManualFixo');
     Route::post('manual-itens-fixo', 'ManualController@saveItemManualFixo');
     Route::delete('manual-itens-fixo/{id}', 'ManualController@removeItemManualFixo');
     Route::put('manual-itens-fixo', 'ManualController@editItemManualFixo');
@@ -41,11 +42,13 @@ Route::group([
     Route::put('manual-item', 'ManualController@editItem');
 
     Route::get('manual-carro/{id_marca}/{id_modelo}/{ano}/{id_versao}', 'ManualController@getManualCarro');
+    Route::post('manual-carro', 'ManualController@listManualCarro');
     Route::delete('manual-carro/{id_marca}/{id_modelo}/{ano}/{id_versao}', 'ManualController@removeManualCarro');
     Route::put('manual-carro', 'ManualController@editManualCarro');
 
     Route::get('list-manual/{modelo}', 'ManualController@getListManual');
     Route::get('last-manual', 'ManualController@lastManual');
+    Route::post('manual-copy', 'ManualController@copy');
 
     Route::get('status', 'StatusController@get');
     Route::post('status', 'StatusController@save');
