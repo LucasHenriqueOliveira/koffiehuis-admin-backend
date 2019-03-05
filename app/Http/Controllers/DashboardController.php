@@ -19,8 +19,8 @@ class DashboardController extends Controller
         $condicoes_uso = DB::select("SELECT count(*) AS `condicoes_uso` FROM `condicoes_uso` WHERE `active` = 1")[0];
         $arrList['condicoes_uso'] = $condicoes_uso->condicoes_uso;
 
-        $manual = DB::select("SELECT count(*) AS `manual` FROM `manual` WHERE `active` = 1")[0];
-        $arrList['manual'] = $manual->manual;
+        $manual = DB::select("SELECT id FROM `manual_carro` WHERE `active` = 1 GROUP BY id_marca, id_modelo, ano, id_versao");
+        $arrList['manual'] = count($manual);
 
         return $arrList;
     }
