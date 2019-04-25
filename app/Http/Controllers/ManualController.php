@@ -271,39 +271,6 @@ class ManualController extends Controller
 
     // MANUAL CARRO -----------------------------
 
-    public function listManualCarro(Request $request) {
-        $marca = '';
-        $modelo = '';
-        $ano = '';
-        $versao = '';
-
-        if ($request->selectedMarca) {
-            $marca = ' AND `mc`.`id_marca` ='.$request->selectedMarca;
-        }
-
-        if ($request->selectedModelo) {
-            $modelo = ' AND `mc`.`id_modelo` ='.$request->selectedModelo;
-        }
-
-        if ($request->selectedAno) {
-            $ano = ' AND `mc`.`ano` ='.$request->selectedAno;
-        }
-
-        if ($request->selectedVersao) {
-            $versao = ' AND `mc`.`id_versao` ='.$request->selectedVersao;
-        }
-
-        return DB::select("SELECT `mc`.`id_marca`, `ma`.`marca`, `mc`.`id_modelo`, `mo`.`modelo`, `mc`.`ano` as `id_ano`, `m_ano`.`ano` as `ano`, `mc`.`id_versao`, `v`.`versao`
-            FROM `manual_carro` AS `mc` INNER JOIN `versao` AS `v` ON `mc`.`id_versao` = `v`.`id_versao`
-            INNER JOIN `marca` AS `ma` ON `mc`.`id_marca` = `ma`.`id`
-            INNER JOIN `modelo` AS `mo` ON `mc`.`id_modelo` = `mo`.`id`
-            INNER JOIN `modelo_ano` AS `m_ano` ON `mc`.`ano` = `m_ano`.`id`
-            WHERE `mc`.`active` = 1 $marca $modelo $ano $versao GROUP BY `mc`.`ano`,`mc`.`id_versao` 
-            ORDER BY `mc`.`id` DESC");
-        
-
-    }
-
     public function getManualCarro(Request $request, $marca, $modelo, $ano, $versao) {
         
         try {
@@ -372,7 +339,7 @@ class ManualController extends Controller
             DB::update('UPDATE `manual_carro` SET `active` = 0 WHERE `id_marca` = ? AND `id_modelo` = ?
                 AND `ano` = ? AND `id_versao` = ?', [$id_marca, $id_modelo, $ano, $id_versao]);
             
-            $list = $this->getListManual($request, $id_modelo);
+            $list = $this->getListManualModelo($request, $id_modelo);
             $message = 'Item deletado com sucesso.';
             return $this->successResponse($list, $message);
         } catch (Exception $e) {
@@ -466,13 +433,48 @@ class ManualController extends Controller
 
     // LIST MANUAL -------------------------------
 
-    public function getListManual(Request $request, $modelo) {
-        return DB::select("SELECT `mc`.`id_marca`, `ma`.`marca`, `mc`.`id_modelo`, `mo`.`modelo`, `mc`.`ano`, `mc`.`id_versao`, `v`.`versao`
+    public function getListManual(Request $request) {
+        $marca = '';
+        $modelo = '';
+        $ano = '';
+        $versao = '';
+
+        if ($request->selectedMarca) {
+            $marca = ' AND `mc`.`id_marca` ='.$request->selectedMarca;
+        }
+
+        if ($request->selectedModelo) {
+            $modelo = ' AND `mc`.`id_modelo` ='.$request->selectedModelo;
+        }
+
+        if ($request->selectedAno) {
+            $ano = ' AND `mc`.`ano` ='.$request->selectedAno;
+        }
+
+        if ($request->selectedVersao) {
+            $versao = ' AND `mc`.`id_versao` ='.$request->selectedVersao;
+        }
+
+        return DB::select("SELECT `mc`.`id_marca`, `ma`.`marca`, `mc`.`id_modelo`, `mo`.`modelo`, `mc`.`ano` as `id_ano`, `m_ano`.`ano` as `ano`, `mc`.`id_versao`, `v`.`versao`
+            FROM `manual_carro` AS `mc` INNER JOIN `versao` AS `v` ON `mc`.`id_versao` = `v`.`id_versao`
+            INNER JOIN `marca` AS `ma` ON `mc`.`id_marca` = `ma`.`id`
+            INNER JOIN `modelo` AS `mo` ON `mc`.`id_modelo` = `mo`.`id`
+            INNER JOIN `modelo_ano` AS `m_ano` ON `mc`.`ano` = `m_ano`.`id`
+            WHERE `mc`.`active` = 1 $marca $modelo $ano $versao ORDER BY `mc`.`id` DESC");
+    }
+
+    public function getListManualModelo(Request $request, $modelo) {
+        if ($modelo) {
+            return DB::select("SELECT `mc`.`id_marca`, `ma`.`marca`, `mc`.`id_modelo`, `mo`.`modelo`, `mc`.`ano`, `mc`.`id_versao`, `v`.`versao`
             FROM `manual_carro` AS `mc` INNER JOIN `versao` AS `v` ON `mc`.`id_versao` = `v`.`id_versao`
             INNER JOIN `marca` AS `ma` ON `mc`.`id_marca` = `ma`.`id`
             INNER JOIN `modelo` AS `mo` ON `mc`.`id_modelo` = `mo`.`id`
             WHERE `mc`.`active` = 1 AND `mc`.`id_modelo` = ? GROUP BY `mc`.`ano`,`mc`.`id_versao` 
             ORDER BY `mc`.`id` DESC", [$modelo]);
+        } else {
+            
+        }
+        
     }
 
 
