@@ -235,7 +235,7 @@ class ManualController extends Controller
                 `km_ideal`, `tempo_ideal`, `observacao_ideal`, `km_severo`, `tempo_severo`, `observacao_severo`) 
             VALUES (?,?,?,?,?,?,?,?)', [$request->item, $request->selectedTitulo, $request->km_ideal, $request->meses_ideal,
             $request->observacao_ideal, $request->km_severo, $request->meses_severo, $request->observacao_severo]);
-            $list = $this->getItemManualFixo($request);
+            $list = $this->itemManualFixo($request);
 
             return $this->successResponse($list, 'Item inserido com sucesso.');
         } catch (Exception $e) {
@@ -246,7 +246,7 @@ class ManualController extends Controller
     public function removeItemManualFixo(Request $request, $id) {
         try {
             DB::update('UPDATE `manual_fixo` SET `active` = 0 WHERE id = ?', [$request->id]);
-            $list = $this->getItemManualFixo($request);
+            $list = $this->itemManualFixo($request);
             $message = 'Item deletado com sucesso.';
             return $this->successResponse($list, $message);
         } catch (Exception $e) {
@@ -261,7 +261,7 @@ class ManualController extends Controller
                 `km_severo` = ?, `tempo_severo` = ?, `observacao_severo` = ? WHERE id = ?',
                 [$request->item, $request->km_ideal, $request->meses_ideal, $request->observacao_ideal, 
                 $request->km_severo, $request->meses_severo, $request->observacao_severo, $request->id]);
-            $list = $this->getItemManualFixo($request);
+            $list = $this->itemManualFixo($request);
             $message = 'Item alterado com sucesso.';
             return $this->successResponse($list, $message);
         } catch (Exception $e) {
