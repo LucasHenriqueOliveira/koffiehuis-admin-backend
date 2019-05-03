@@ -280,7 +280,7 @@ class ManualController extends Controller
             $manual = DB::select("SELECT `manual_carro`.`id_manual` AS `id`, `manual`.`item`, `manual_carro`.`id_manual`,
                 `manual_carro`.`km_ideal`, `manual_carro`.`tempo_ideal` AS `meses_ideal`, `manual_carro`.`observacao_ideal`,
                 `manual_carro`.`km_severo`, `manual_carro`.`tempo_severo` AS `meses_severo`, `manual_carro`.`observacao_severo`,
-                `titulo`.`titulo`, `manual`.`id_titulo`
+                `titulo`.`titulo`, `manual`.`id_titulo`, `manual_carro`.`id` AS `id_manual_carro`
                 FROM `manual_carro`
                 INNER JOIN `manual` ON `manual_carro`.`id_manual` = `manual`.`id`
                 INNER JOIN `titulo` ON `manual`.`id_titulo` = `titulo`.`id`
@@ -334,6 +334,18 @@ class ManualController extends Controller
         }
     }
 
+    public function removeItemManualCarro(Request $request, $id, $marca, $modelo, $ano, $versao) {
+        try {
+            DB::update('UPDATE `manual_carro` SET `active` = 0 WHERE `id` = ?', [$id]);
+            
+            $list = $this->getManualCarro($request, $marca, $modelo, $ano, $versao);
+            $message = 'Item deletado com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
     public function removeManualCarro(Request $request, $id_marca, $id_modelo, $ano, $id_versao) {
         try {
             DB::update('UPDATE `manual_carro` SET `active` = 0 WHERE `id_marca` = ? AND `id_modelo` = ?
@@ -365,6 +377,32 @@ class ManualController extends Controller
             $list = [];
             $message = 'Item alterado com sucesso.';
             return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function addItemManual(Request $request) {
+
+        try {
+
+            $item = DB::select("SELECT * FROM `manual_carro` WHERE `id_manual` = ? AND `id_marca` = ? AND `id_modelo` = ? AND 
+                `ano` = ? AND `id_versao` = ?", [$request->item, $request->marca, $request->modelo, $request->ano, $request->versao]);
+
+            if(count($item)) {
+                return response()->json([
+                    'error' => 'Item já cadastrado para o veículo.'
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            DB::insert('INSERT INTO `manual_carro` (`id_manual`, `id_marca`, `id_modelo`, `ano`, `id_versao`, `km_ideal`,
+                `tempo_ideal`, `observacao_ideal`, `km_severo`, `tempo_severo`, `observacao_severo`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+            [$request->item, $request->marca, $request->modelo, $request->ano, $request->versao, $request->km_ideal, $request->meses_ideal, 
+            $request->observacao_ideal, $request->km_severo, $request->meses_severo, $request->observacao_severo]);
+            
+            $list = $this->getManualCarro($request, $request->marca, $request->modelo, $request->ano, $request->versao);
+
+            return $this->successResponse($list, 'Item inserido com sucesso.');
         } catch (Exception $e) {
             return $this->failedResponse();
         }
