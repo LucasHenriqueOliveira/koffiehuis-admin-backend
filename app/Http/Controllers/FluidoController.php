@@ -16,7 +16,7 @@ class FluidoController extends Controller
         try {
             DB::insert('INSERT INTO `fluido` (`nome`) VALUES (?)', [$request->nome]);
             $list = DB::select("SELECT * FROM `fluido` WHERE `active` = 1");
-            return $this->successResponse($list, 'Fluído adicionado com sucesso.');
+            return $this->successResponse($list, 'Fluido adicionado com sucesso.');
         } catch (Exception $e) {
             return $this->failedResponse();
         }
@@ -39,7 +39,7 @@ class FluidoController extends Controller
         try {
             DB::update('UPDATE `fluido` SET `active` = ? WHERE id = ?', [0, $id]);
             $list = DB::select("SELECT * FROM `fluido` WHERE `active` = 1");
-            $message = 'Fluído deletado com sucesso.';
+            $message = 'Fluido deletado com sucesso.';
             return $this->successResponse($list, $message);
         } catch (Exception $e) {
             return $this->failedResponse();
@@ -50,7 +50,7 @@ class FluidoController extends Controller
         try {
             DB::update('UPDATE `fluido` SET `nome` = ? WHERE id = ?', [$request->nome, $request->id]);
             $list = DB::select("SELECT * FROM `fluido` WHERE `active` = 1");
-            $message = 'Fluído alterado com sucesso.';
+            $message = 'Fluido alterado com sucesso.';
             return $this->successResponse($list, $message);
         } catch (Exception $e) {
             return $this->failedResponse();

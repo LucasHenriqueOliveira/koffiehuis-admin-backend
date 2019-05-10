@@ -31,6 +31,29 @@ class ManualController extends Controller
                     [$request->itens[$i]['id'], $request->itens[$i]['km_ideal'], $request->itens[$i]['meses_ideal'], $request->itens[$i]['observacao_ideal'],
                     $request->itens[$i]['km_severo'], $request->itens[$i]['meses_severo'], $request->itens[$i]['observacao_severo'], $request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao]);
                 }
+
+                // MANUAL CARRO INFO -------------------------------------
+
+                DB::insert('REPLACE INTO `manual_carro_info` (`id_marca`, `id_modelo`, `ano`, `id_versao`,
+                        `cabine`, `carga`, `parte`, `roda_raio`, `pneu_medida`, `calibragem_psi`, `observacao_geral`) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                    [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, 
+                    $request->selectedCabine, $request->selectedCarga, $request->selectedParte, $request->inputRodaRaio, 
+                    $request->inputPneuMedida, $request->inputCalibragemPsi, $request->observacaoInfo]);
+
+
+                // MANUAL FLUIDO -------------------------------------
+
+                for($i = 0; $i < count($request->fluidos); $i++) {
+                    DB::insert('INSERT INTO `manual_carro_fluido` (`id_marca`, `id_modelo`, `ano`, `id_versao`, 
+                        `id_fluido`, `descricao`, `litros`, `observacao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', 
+                    [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, 
+                    $request->fluidos[$i]['id'], $request->fluidos[$i]['descricao'], $request->fluidos[$i]['litros'], 
+                    $request->fluidos[$i]['observacao']]);
+                }
+                
+                // MANUAL OBSERVACAO -------------------------------------
+
                 DB::insert('REPLACE INTO `observacao` (`id_marca`, `id_modelo`, `ano`, `id_versao`, `observacao`) VALUES (?, ?, ?, ?, ?)', 
                     [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, $request->observacao]);
                 
