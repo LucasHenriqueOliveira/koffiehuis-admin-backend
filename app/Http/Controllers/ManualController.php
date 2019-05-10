@@ -340,6 +340,14 @@ class ManualController extends Controller
             $arr['manual'] = $arrItems;
             $arr['manual_fixo'] = $this->getItemManualFixo($request);
 
+            $arr['manual_info'] = '';
+
+            $info = DB::select("SELECT * FROM `manual_carro_info`
+             WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ?", [$marca, $modelo, $ano, $versao]);
+
+            if(count($info)) {
+                $arr['manual_info'] = $info[0];
+            }
 
             $observacao = DB::select("SELECT `observacao` FROM `observacao`
              WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ?", [$marca, $modelo, $ano, $versao]);
@@ -349,6 +357,10 @@ class ManualController extends Controller
             if(count($observacao)) {
                 $arr['observacao'] = $observacao[0]->observacao;
             }
+
+            $arr['manual_fluido'] = DB::select("SELECT * FROM `manual_carro_fluido` AS `mf` INNER JOIN `fluido` AS `f`
+                ON `mf`.`id_fluido` = `f`.`id`
+             WHERE `mf`.`id_marca` = ? AND `mf`.`id_modelo` = ? AND `mf`.`ano` = ? AND `mf`.`id_versao` = ?", [$marca, $modelo, $ano, $versao]);
 
             return $arr;
 
