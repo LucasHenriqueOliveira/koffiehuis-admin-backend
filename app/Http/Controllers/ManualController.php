@@ -25,6 +25,31 @@ class ManualController extends Controller
                 ], Response::HTTP_NOT_FOUND);
 
             } else {
+
+                if (!$request->selectedMarca) {
+                    return response()->json([
+                        'error' => 'Favor selecionar a marca.'
+                    ], Response::HTTP_NOT_FOUND);
+                }
+
+                if (!$request->selectedModelo) {
+                    return response()->json([
+                        'error' => 'Favor selecionar o modelo.'
+                    ], Response::HTTP_NOT_FOUND);
+                }
+
+                if (!$request->selectedAno) {
+                        return response()->json([
+                        'error' => 'Favor selecionar o ano.'
+                    ], Response::HTTP_NOT_FOUND);
+                }
+
+                if (!$request->selectedVersao) {
+                    return response()->json([
+                        'error' => 'Favor selecionar a versão.'
+                    ], Response::HTTP_NOT_FOUND);
+                }
+
                 for($i = 0; $i < count($request->itens); $i++) {
                     DB::insert('INSERT INTO `manual_carro` (`id_manual`, `km_ideal`, `tempo_ideal`, `observacao_ideal`, `km_severo`, `tempo_severo`, `observacao_severo`,
                         `id_marca`, `id_modelo`, `ano`, `id_versao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
@@ -422,7 +447,7 @@ class ManualController extends Controller
         try {
 
             $item = DB::select("SELECT * FROM `manual_carro` WHERE `id_manual` = ? AND `id_marca` = ? AND `id_modelo` = ? AND 
-                `ano` = ? AND `id_versao` = ?", [$request->item, $request->marca, $request->modelo, $request->ano, $request->versao]);
+                `ano` = ? AND `id_versao` = ? AND `active` = 1", [$request->item, $request->marca, $request->modelo, $request->ano, $request->versao]);
 
             if(count($item)) {
                 return response()->json([
