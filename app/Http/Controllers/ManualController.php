@@ -71,16 +71,17 @@ class ManualController extends Controller
 
                 for($i = 0; $i < count($request->fluidos); $i++) {
                     DB::insert('INSERT INTO `manual_carro_fluido` (`id_marca`, `id_modelo`, `ano`, `id_versao`, 
-                        `id_fluido`, `descricao`, `litros`, `observacao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', 
+                        `id_fluido`, `descricao1`, `descricao2`, `descricao3`, `litros`, `observacao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', 
                     [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, 
-                    $request->fluidos[$i]['id'], $request->fluidos[$i]['descricao'], $request->fluidos[$i]['litros'], 
+                    $request->fluidos[$i]['id'], $request->fluidos[$i]['descricao1'], $request->fluidos[$i]['descricao2'],
+                    $request->fluidos[$i]['descricao3'], $request->fluidos[$i]['litros'], 
                     $request->fluidos[$i]['observacao']]);
                 }
                 
                 // MANUAL OBSERVACAO -------------------------------------
 
-                DB::insert('REPLACE INTO `observacao` (`id_marca`, `id_modelo`, `ano`, `id_versao`, `observacao`) VALUES (?, ?, ?, ?, ?)', 
-                    [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, $request->observacao]);
+                DB::insert('REPLACE INTO `observacao` (`id_marca`, `id_modelo`, `ano`, `id_versao`, `observacao`, `observacao_fluido`) VALUES (?, ?, ?, ?, ?, ?)', 
+                    [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, $request->observacao, $request->observacaoGeralFluido]);
                 
                 return $this->successResponse(null, 'Plano de manutenção inserido com sucesso.');
             }
