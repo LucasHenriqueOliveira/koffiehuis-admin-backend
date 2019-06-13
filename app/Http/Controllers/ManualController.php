@@ -60,18 +60,22 @@ class ManualController extends Controller
                 // MANUAL CARRO INFO -------------------------------------
 
                 DB::insert('REPLACE INTO `manual_carro_info` (`id_marca`, `id_modelo`, `ano`, `id_versao`,
-                        `cabine`, `carga`, `parte`, `roda_raio`, `pneu_medida`, `calibragem_psi`, `observacao_geral`) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                        `cabine`, `roda_raio`, `pneu_medida`, `normal_traseira_calibragem_psi`, `normal_dianteira_calibragem_psi`,
+                        `completa_traseira_calibragem_psi`, `completa_dianteira_calibragem_psi`, `estepe_calibragem_psi`, 
+                        `observacao_geral`) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
                     [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, 
-                    $request->selectedCabine, $request->selectedCarga, $request->selectedParte, $request->inputRodaRaio, 
-                    $request->inputPneuMedida, $request->inputCalibragemPsi, $request->observacaoInfo]);
+                    $request->selectedCabine, $request->inputRodaRaio, $request->inputPneuMedida, 
+                    $request->inputNormalTraseiraCalibragemPsi, $request->inputNormalDianteiraCalibragemPsi,
+                    $request->inputCompletaTraseiraCalibragemPsi, $request->inputCompletaDianteiraCalibragemPsi,
+                    $request->inputEstepeCalibragemPsi, $request->observacaoInfo]);
 
 
                 // MANUAL FLUIDO -------------------------------------
 
                 for($i = 0; $i < count($request->fluidos); $i++) {
                     DB::insert('INSERT INTO `manual_carro_fluido` (`id_marca`, `id_modelo`, `ano`, `id_versao`, 
-                        `id_fluido`, `descricao1`, `descricao2`, `descricao3`, `litros`, `observacao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', 
+                        `id_fluido`, `descricao1`, `descricao2`, `descricao3`, `litros`, `observacao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
                     [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, 
                     $request->fluidos[$i]['id'], $request->fluidos[$i]['descricao1'], $request->fluidos[$i]['descricao2'],
                     $request->fluidos[$i]['descricao3'], $request->fluidos[$i]['litros'], 
@@ -375,13 +379,14 @@ class ManualController extends Controller
                 $arr['manual_info'] = $info[0];
             }
 
-            $observacao = DB::select("SELECT `observacao` FROM `observacao`
+            $observacao = DB::select("SELECT `observacao`, `observacao_fluido` FROM `observacao`
              WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ?", [$marca, $modelo, $ano, $versao]);
             
             $arr['observacao'] = '';
 
             if(count($observacao)) {
                 $arr['observacao'] = $observacao[0]->observacao;
+                $arr['observacao_fluido'] = $observacao[0]->observacao_fluido;
             }
 
             $arr['manual_fluido'] = DB::select("SELECT * FROM `manual_carro_fluido` AS `mf` INNER JOIN `fluido` AS `f`
