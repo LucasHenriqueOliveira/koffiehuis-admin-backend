@@ -77,6 +77,9 @@ Route::group([
     Route::put('fluido', 'FluidoController@edit');
     Route::delete('fluido/{id}', 'FluidoController@remove');
 
+    Route::put('fluido-carro', 'ManualController@editFluidoCarro');
+    Route::post('fluido-carro', 'ManualController@removeFluidoCarro');
+
     Route::get('titulo-fixo', 'TituloFixoController@get');
     Route::post('titulo-fixo', 'TituloFixoController@save');
     Route::put('titulo-fixo', 'TituloFixoController@edit');

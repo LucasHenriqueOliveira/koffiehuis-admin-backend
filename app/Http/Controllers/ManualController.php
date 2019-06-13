@@ -389,9 +389,7 @@ class ManualController extends Controller
                 $arr['observacao_fluido'] = $observacao[0]->observacao_fluido;
             }
 
-            $arr['manual_fluido'] = DB::select("SELECT * FROM `manual_carro_fluido` AS `mf` INNER JOIN `fluido` AS `f`
-                ON `mf`.`id_fluido` = `f`.`id`
-             WHERE `mf`.`id_marca` = ? AND `mf`.`id_modelo` = ? AND `mf`.`ano` = ? AND `mf`.`id_versao` = ?", [$marca, $modelo, $ano, $versao]);
+            $arr['manual_fluido'] = $this->getListFluido($marca, $modelo, $ano, $versao);
 
             return $arr;
 
@@ -579,6 +577,42 @@ class ManualController extends Controller
             
         }
         
+    }
+
+
+    // FLUIDOS --------------------------------
+
+    public function getListFluido($marca, $modelo, $ano, $versao) {
+
+        return DB::select("SELECT *, `mf`.`id` AS `id_manual_carro_fluido` 
+                FROM `manual_carro_fluido` AS `mf` INNER JOIN `fluido` AS `f`
+                ON `mf`.`id_fluido` = `f`.`id`
+             WHERE `mf`.`id_marca` = ? AND `mf`.`id_modelo` = ? AND `mf`.`ano` = ? AND `mf`.`id_versao` = ? AND `mf`.`active` = 1", [$marca, $modelo, $ano, $versao]);
+
+    }
+
+    public function editFluidoCarro(Request $request) {
+        try {
+            DB::update('UPDATE `manual_carro_fluido` SET `id_fluido` = ?, `descricao1` = ?, `descricao2` = ?, `descricao3` = ?,
+             `litros` = ?, `observacao` = ? WHERE id = ?', [$request->id_fluido, $request->descricao1, $request->descricao2,
+             $request->descricao3, $request->litros, $request->observacao, $request->id]);
+            $list = $this->getListFluido($request->marca, $request->modelo, $request->ano, $request->versao);
+            $message = 'Fluido alterado com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function removeFluidoCarro(Request $request) {
+        try {
+            DB::update('UPDATE `manual_carro_fluido` SET `active` = 0 WHERE id = ?', [$request->id]);
+            $list = $this->getListFluido($request->marca, $request->modelo, $request->ano, $request->versao);
+            $message = 'Fluido removido com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
     }
 
 
