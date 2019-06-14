@@ -373,7 +373,7 @@ class ManualController extends Controller
             $arr['manual_info'] = '';
 
             $info = DB::select("SELECT * FROM `manual_carro_info`
-             WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ?", [$marca, $modelo, $ano, $versao]);
+             WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ? AND `active` = 1", [$marca, $modelo, $ano, $versao]);
 
             if(count($info)) {
                 $arr['manual_info'] = $info[0];
@@ -467,6 +467,21 @@ class ManualController extends Controller
             $list = $this->getManualCarro($request, $request->marca, $request->modelo, $request->ano, $request->versao);
 
             return $this->successResponse($list, 'Item inserido com sucesso.');
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function editManualItem(Request $request) {
+        try {
+            DB::update('UPDATE `manual_carro` SET `km_ideal` = ?, `tempo_ideal` = ?, `observacao_ideal` = ?, 
+                `km_severo` = ?, `tempo_severo` = ?, `observacao_severo` = ? WHERE id = ?', 
+                [$request->km_ideal, $request->meses_ideal, $request->observacao_ideal, $request->km_severo, 
+                $request->meses_severo, $request->observacao_severo, $request->id]);
+            
+            $list = $this->getManualCarro($request, $request->id_marca, $request->id_modelo, $request->ano, $request->id_versao);
+            $message = 'Item alterado com sucesso.';
+            return $this->successResponse($list, $message);
         } catch (Exception $e) {
             return $this->failedResponse();
         }
@@ -609,6 +624,87 @@ class ManualController extends Controller
             DB::update('UPDATE `manual_carro_fluido` SET `active` = 0 WHERE id = ?', [$request->id]);
             $list = $this->getListFluido($request->marca, $request->modelo, $request->ano, $request->versao);
             $message = 'Fluido removido com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function addFluidoCarro(Request $request) {
+        try {
+            DB::insert('INSERT INTO `manual_carro_fluido` (`id_marca`, `id_modelo`, `ano`, `id_versao`,
+                `id_fluido`, `descricao1`, `descricao2`, `descricao3`, `litros`, `observacao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+            [$request->id_marca, $request->id_modelo, $request->ano, $request->id_versao, $request->id_fluido,
+            $request->descricao1, $request->descricao2, $request->descricao3, $request->litros, $request->observacao]);
+            $list = $this->getListFluido($request->id_marca, $request->id_modelo, $request->ano, $request->id_versao);
+            $message = 'Fluido adicionado com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function editObservacaoFluidoCarro(Request $request) {
+        try {
+            DB::update('UPDATE `observacao` SET `observacao_fluido` = ? WHERE id_marca = ? AND id_modelo = ? 
+                AND ano = ? AND id_versao = ?', [$request->observacao, $request->id_marca, $request->id_modelo, 
+                $request->ano, $request->id_versao]);
+            $list = $request->observacao;
+            $message = 'Observação alterada com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+
+    // MANUAL CARRO INFO -----------------------------------
+
+    public function editObservacaoInfo(Request $request) {
+        try {
+            DB::update('UPDATE `manual_carro_info` SET `observacao_geral` = ? WHERE id_marca = ? AND id_modelo = ? 
+                AND ano = ? AND id_versao = ? AND active = 1', [$request->observacao, $request->id_marca, $request->id_modelo, 
+                $request->ano, $request->id_versao]);
+            $list = $request->observacao;
+            $message = 'Observação alterada com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function editObservacaoGeral(Request $request) {
+        try {
+            DB::update('UPDATE `observacao` SET `observacao` = ? WHERE id_marca = ? AND id_modelo = ? 
+                AND ano = ? AND id_versao = ?', [$request->observacao, $request->id_marca, $request->id_modelo, 
+                $request->ano, $request->id_versao]);
+            $list = $request->observacao;
+            $message = 'Observação alterada com sucesso.';
+            return $this->successResponse($list, $message);
+        } catch (Exception $e) {
+            return $this->failedResponse();
+        }
+    }
+
+    public function editRodas(Request $request) {
+        try {
+            DB::update('UPDATE `manual_carro_info` SET `cabine` = ?, `roda_raio` = ?, `pneu_medida` = ?, 
+                `normal_traseira_calibragem_psi` = ?, `normal_dianteira_calibragem_psi` = ?,
+                `completa_traseira_calibragem_psi` = ?, `completa_dianteira_calibragem_psi` = ?, `estepe_calibragem_psi` = ? 
+                WHERE id_marca = ? AND id_modelo = ? AND ano = ? AND id_versao = ? AND active = 1', 
+                [$request->cabine, $request->roda_raio, $request->pneu_medida, $request->normal_dianteira_calibragem_psi, 
+                $request->normal_traseira_calibragem_psi, $request->completa_dianteira_calibragem_psi, 
+                $request->completa_traseira_calibragem_psi, $request->estepe_calibragem_psi, 
+                $request->id_marca, $request->id_modelo, $request->ano, $request->id_versao]);
+            $list['cabine'] = $request->cabine;
+            $list['roda_raio'] = $request->roda_raio;
+            $list['pneu_medida'] = $request->pneu_medida;
+            $list['normal_dianteira_calibragem_psi'] = $request->normal_dianteira_calibragem_psi;
+            $list['normal_traseira_calibragem_psi'] = $request->normal_traseira_calibragem_psi;
+            $list['completa_dianteira_calibragem_psi'] = $request->completa_dianteira_calibragem_psi;
+            $list['completa_traseira_calibragem_psi'] = $request->completa_traseira_calibragem_psi;
+            $list['estepe_calibragem_psi'] = $request->estepe_calibragem_psi;
+            $message = 'Rodas e pneus alterado com sucesso.';
             return $this->successResponse($list, $message);
         } catch (Exception $e) {
             return $this->failedResponse();

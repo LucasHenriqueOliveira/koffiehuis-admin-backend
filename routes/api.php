@@ -56,6 +56,10 @@ Route::group([
     Route::post('list-manual', 'ManualController@getListManual');
     Route::get('last-manual', 'ManualController@lastManual');
     Route::post('manual-copy', 'ManualController@copy');
+    Route::put('manual-observacao-geral', 'ManualController@editObservacaoGeral');
+    Route::put('manual-observacao-info', 'ManualController@editObservacaoInfo');
+    Route::put('manual-rodas', 'ManualController@editRodas');
+    Route::put('manual-item-edit', 'ManualController@editManualItem');
 
     Route::get('status', 'StatusController@get');
     Route::post('status', 'StatusController@save');
@@ -79,6 +83,8 @@ Route::group([
 
     Route::put('fluido-carro', 'ManualController@editFluidoCarro');
     Route::post('fluido-carro', 'ManualController@removeFluidoCarro');
+    Route::post('fluido-carro-add', 'ManualController@addFluidoCarro');
+    Route::put('fluido-carro-obs', 'ManualController@editObservacaoFluidoCarro');
 
     Route::get('titulo-fixo', 'TituloFixoController@get');
     Route::post('titulo-fixo', 'TituloFixoController@save');
