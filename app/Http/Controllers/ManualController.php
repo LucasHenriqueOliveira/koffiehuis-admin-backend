@@ -26,8 +26,6 @@ class ManualController extends Controller
 
             } else {
 
-                DB::beginTransaction();
-
                 if (!$request->selectedMarca) {
                     return response()->json([
                         'error' => 'Favor selecionar a marca.'
@@ -89,12 +87,10 @@ class ManualController extends Controller
                 DB::insert('REPLACE INTO `observacao` (`id_marca`, `id_modelo`, `ano`, `id_versao`, `observacao`, `observacao_fluido`) VALUES (?, ?, ?, ?, ?, ?)', 
                     [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, $request->observacao, $request->observacaoGeralFluido]);
                 
-                DB::commit();
                 return $this->successResponse(null, 'Plano de manutenção inserido com sucesso.');
             }
             
         } catch (Exception $e) {
-            DB::rollBack();
             return $this->failedResponse();
         }
     }
