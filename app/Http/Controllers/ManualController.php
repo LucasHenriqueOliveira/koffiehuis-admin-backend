@@ -26,6 +26,8 @@ class ManualController extends Controller
 
             } else {
 
+                DB::beginTransaction();
+
                 if (!$request->selectedMarca) {
                     return response()->json([
                         'error' => 'Favor selecionar a marca.'
@@ -87,10 +89,12 @@ class ManualController extends Controller
                 DB::insert('REPLACE INTO `observacao` (`id_marca`, `id_modelo`, `ano`, `id_versao`, `observacao`, `observacao_fluido`) VALUES (?, ?, ?, ?, ?, ?)', 
                     [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, $request->observacao, $request->observacaoGeralFluido]);
                 
+                DB::commit();
                 return $this->successResponse(null, 'Plano de manutenção inserido com sucesso.');
             }
             
         } catch (Exception $e) {
+            DB::rollBack();
             return $this->failedResponse();
         }
     }
@@ -109,6 +113,8 @@ class ManualController extends Controller
                 ], Response::HTTP_NOT_FOUND);
 
             } else {
+
+                DB::beginTransaction();
 
                 $manual = DB::select("SELECT `manual_carro`.`id_manual` AS `id`, `manual`.`item`, `manual_carro`.`id_manual`,
                     `manual_carro`.`km_ideal`, `manual_carro`.`tempo_ideal` AS `meses_ideal`, `manual_carro`.`observacao_ideal`,
@@ -129,13 +135,64 @@ class ManualController extends Controller
                         $manual[$i]->meses_severo, $manual[$i]->observacao_severo,
                         $request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao]);
                 }
-                DB::insert('REPLACE INTO `observacao` (`id_marca`, `id_modelo`, `ano`, `id_versao`, `observacao`) VALUES (?, ?, ?, ?, ?)', 
-                    [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, $request->observacao]);
                 
+                // MANUAL CARRO INFO -------------------------------------
+
+                $manual_carro_info = DB::select("SELECT * FROM `manual_carro_info` 
+                WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ? AND `active` = 1",
+                [$request->marcaAntigo, $request->modeloAntigo, $request->anoAntigo, $request->versaoAntigo]);
+
+                if(count($manual_carro_info)) {
+                    $info = $manual_carro_info[0];
+                    DB::insert('REPLACE INTO `manual_carro_info` (`id_marca`, `id_modelo`, `ano`, `id_versao`,
+                        `cabine`, `roda_raio`, `pneu_medida`, `normal_traseira_calibragem_psi`, `normal_dianteira_calibragem_psi`,
+                        `completa_traseira_calibragem_psi`, `completa_dianteira_calibragem_psi`, `estepe_calibragem_psi`, 
+                        `observacao_geral`, `active`) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                    [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, 
+                    $info->cabine, $info->roda_raio, $info->pneu_medida, 
+                    $info->normal_traseira_calibragem_psi, $info->normal_dianteira_calibragem_psi,
+                    $info->completa_traseira_calibragem_psi, $info->completa_dianteira_calibragem_psi,
+                    $info->estepe_calibragem_psi, $info->observacao_geral, 1]);
+
+                }
+                
+
+                // MANUAL FLUIDO -------------------------------------
+
+                $manual_fluido = DB::select("SELECT * FROM `manual_carro_fluido` 
+                WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ? AND `active` = 1",
+                [$request->marcaAntigo, $request->modeloAntigo, $request->anoAntigo, $request->versaoAntigo]);
+
+                for($i = 0; $i < count($manual_fluido); $i++) {
+                    DB::insert('INSERT INTO `manual_carro_fluido` (`id_marca`, `id_modelo`, `ano`, `id_versao`, 
+                        `id_fluido`, `descricao1`, `descricao2`, `descricao3`, `litros`, `observacao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                    [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, 
+                    $manual_fluido[$i]->id, $manual_fluido[$i]->descricao1, $manual_fluido[$i]->descricao2,
+                    $manual_fluido[$i]->descricao3, $manual_fluido[$i]->litros, $manual_fluido[$i]->observacao]);
+                }
+                
+                // MANUAL OBSERVACAO -------------------------------------
+
+                $observacao = DB::select("SELECT * FROM `observacao` 
+                WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ?",
+                [$request->marcaAntigo, $request->modeloAntigo, $request->anoAntigo, $request->versaoAntigo]);
+
+                if(count($observacao)) {
+                    $obs = $observacao[0];
+
+                    DB::insert('REPLACE INTO `observacao` (`id_marca`, `id_modelo`, `ano`, `id_versao`, `observacao`, `observacao_fluido`) 
+                        VALUES (?, ?, ?, ?, ?, ?)', 
+                    [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, 
+                    $obs->observacao, $obs->observacao_fluido]);
+                }
+
+                DB::commit();
                 return $this->successResponse(null, 'Plano de manutenção inserido com sucesso.');
             }
             
         } catch (Exception $e) {
+            DB::rollBack();
             return $this->failedResponse();
         }
     }
