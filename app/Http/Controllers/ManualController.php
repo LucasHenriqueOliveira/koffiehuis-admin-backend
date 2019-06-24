@@ -577,7 +577,9 @@ class ManualController extends Controller
             INNER JOIN `marca` AS `ma` ON `mc`.`id_marca` = `ma`.`id`
             INNER JOIN `modelo` AS `mo` ON `mc`.`id_modelo` = `mo`.`id`
             INNER JOIN `modelo_ano` AS `m_ano` ON `mc`.`ano` = `m_ano`.`id`
-            WHERE `mc`.`active` = 1 $marca $modelo $ano $versao ORDER BY `mc`.`id` DESC");
+            WHERE `mc`.`active` = 1 $marca $modelo $ano $versao 
+            GROUP BY `mc`.`id_marca`,`mc`.`id_modelo`, `mc`.`ano`, `mc`.`id_versao`
+            ORDER BY `mc`.`id` DESC");
     }
 
     public function getListManualModelo(Request $request, $modelo) {
