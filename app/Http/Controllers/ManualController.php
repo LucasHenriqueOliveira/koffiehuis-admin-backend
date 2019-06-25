@@ -26,6 +26,8 @@ class ManualController extends Controller
 
             } else {
 
+                DB::beginTransaction();
+
                 if (!$request->selectedMarca) {
                     return response()->json([
                         'error' => 'Favor selecionar a marca.'
@@ -74,12 +76,33 @@ class ManualController extends Controller
                 // MANUAL FLUIDO -------------------------------------
 
                 for($i = 0; $i < count($request->fluidos); $i++) {
+
+                    $descricao1 = $descricao2 = $descricao3 = $litros = $observacao = '';
+
+                    if (array_key_exists('descricao1', $request->fluidos[$i])) {
+                        $descricao1 = $request->fluidos[$i]['descricao1'];
+                    }
+
+                    if (array_key_exists('descricao2', $request->fluidos[$i])) {
+                        $descricao2 = $request->fluidos[$i]['descricao2'];
+                    }
+
+                    if (array_key_exists('descricao3', $request->fluidos[$i])) {
+                        $descricao3 = $request->fluidos[$i]['descricao3'];
+                    }
+
+                    if (array_key_exists('litros', $request->fluidos[$i])) {
+                        $litros = $request->fluidos[$i]['litros'];
+                    }
+
+                    if (array_key_exists('observacao', $request->fluidos[$i])) {
+                        $observacao = $request->fluidos[$i]['observacao'];
+                    }
+
                     DB::insert('INSERT INTO `manual_carro_fluido` (`id_marca`, `id_modelo`, `ano`, `id_versao`, 
                         `id_fluido`, `descricao1`, `descricao2`, `descricao3`, `litros`, `observacao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
                     [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, 
-                    $request->fluidos[$i]['id'], $request->fluidos[$i]['descricao1'], $request->fluidos[$i]['descricao2'],
-                    $request->fluidos[$i]['descricao3'], $request->fluidos[$i]['litros'], 
-                    $request->fluidos[$i]['observacao']]);
+                    $request->fluidos[$i]['id'], $descricao1, $descricao2, $descricao3, $litros, $observacao]);
                 }
                 
                 // MANUAL OBSERVACAO -------------------------------------
@@ -87,10 +110,12 @@ class ManualController extends Controller
                 DB::insert('REPLACE INTO `observacao` (`id_marca`, `id_modelo`, `ano`, `id_versao`, `observacao`, `observacao_fluido`) VALUES (?, ?, ?, ?, ?, ?)', 
                     [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao, $request->observacao, $request->observacaoGeralFluido]);
                 
+                DB::commit();
                 return $this->successResponse(null, 'Plano de manutenção inserido com sucesso.');
             }
             
         } catch (Exception $e) {
+            DB::rollBack();
             return $this->failedResponse();
         }
     }
