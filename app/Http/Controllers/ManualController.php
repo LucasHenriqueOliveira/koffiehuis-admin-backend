@@ -15,7 +15,7 @@ class ManualController extends Controller
         try {
 
             $item = DB::select("SELECT * FROM `manual_carro` 
-                WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ?",
+                WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ? AND `active` = 1",
                 [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao]);
 
             if (count($item)) {
@@ -99,7 +99,7 @@ class ManualController extends Controller
         try {
 
             $item = DB::select("SELECT * FROM `manual_carro` 
-                WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ?",
+                WHERE `id_marca` = ? AND `id_modelo` = ? AND `ano` = ? AND `id_versao` = ? AND `active` = 1",
                 [$request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao]);
 
             if (count($item)) {
