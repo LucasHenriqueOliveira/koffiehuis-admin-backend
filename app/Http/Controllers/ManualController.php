@@ -267,18 +267,18 @@ class ManualController extends Controller
     // ITEM DO MANUAL -------------------------------------
 
     public function getItemManual(Request $request) {
-        return DB::select("SELECT `m`.`id`, `m`.`item`, `m`.`id_titulo`, `t`.`titulo` FROM `manual` AS `m`
+        return DB::select("SELECT `m`.`id`, `m`.`item`, `m`.`id_titulo`, `t`.`titulo`, `m`.`severo` FROM `manual` AS `m`
             INNER JOIN `titulo` AS `t` ON `m`.`id_titulo` = `t`.`id`
             WHERE `m`.`active` = 1");
     }
 
     public function getItemManualTitulo(Request $request, $id) {
-        return DB::select("SELECT `id`, `item`, `id_titulo` FROM `manual` WHERE `id_titulo` = ?", [$id]);
+        return DB::select("SELECT `id`, `item`, `id_titulo`, `severo` FROM `manual` WHERE `id_titulo` = ?", [$id]);
     }
 
     public function saveItemManual(Request $request) {
         try {
-            DB::insert('INSERT INTO `manual` (`item`, `id_titulo`) VALUES (?, ?)', [$request->item, $request->selectedTitulo]);
+            DB::insert('INSERT INTO `manual` (`item`, `id_titulo`, `severo`) VALUES (?, ?, ?)', [$request->item, $request->selectedTitulo, $request->severo]);
             $list = $this->getItemManual($request);
 
             return $this->successResponse($list, 'Item inserido com sucesso.');
@@ -300,7 +300,7 @@ class ManualController extends Controller
 
     public function editItemManual(Request $request) {
         try {
-            DB::update('UPDATE `manual` SET `item` = ? WHERE id = ?', [$request->item, $request->id]);
+            DB::update('UPDATE `manual` SET `item` = ?, `severo` = ? WHERE id = ?', [$request->item, $request->severo, $request->id]);
             $list = $this->getItemManual($request);
             $message = 'Item alterado com sucesso.';
             return $this->successResponse($list, $message);
