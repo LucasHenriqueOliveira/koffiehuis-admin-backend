@@ -53,9 +53,10 @@ class ManualController extends Controller
                 }
 
                 for($i = 0; $i < count($request->itens); $i++) {
-                    DB::insert('INSERT INTO `manual_carro` (`id_manual`, `km_ideal`, `tempo_ideal`, `observacao_ideal`, `km_severo`, `tempo_severo`, `observacao_severo`,
-                        `id_marca`, `id_modelo`, `ano`, `id_versao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                    DB::insert('INSERT INTO `manual_carro` (`id_manual`, `km_ideal`, `tempo_ideal`, `observacao_ideal`, `km_misto`, `tempo_misto`, `observacao_misto`, `km_severo`, `tempo_severo`, `observacao_severo`,
+                        `id_marca`, `id_modelo`, `ano`, `id_versao`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
                     [$request->itens[$i]['id'], $request->itens[$i]['km_ideal'], $request->itens[$i]['meses_ideal'], $request->itens[$i]['observacao_ideal'],
+                    $request->itens[$i]['km_misto'], $request->itens[$i]['meses_misto'], $request->itens[$i]['observacao_misto'],
                     $request->itens[$i]['km_severo'], $request->itens[$i]['meses_severo'], $request->itens[$i]['observacao_severo'], $request->selectedMarca, $request->selectedModelo, $request->selectedAno, $request->selectedVersao]);
                 }
 
@@ -317,7 +318,8 @@ class ManualController extends Controller
         $arrItems = array();
 
         $manual = DB::select("SELECT `m`.`id`, `m`.`item`, `m`.`id_titulo`, `t`.`titulo`,
-            `m`.`km_ideal`, `m`.`tempo_ideal`, `m`.`observacao_ideal`, `m`.`km_severo`, `m`.`tempo_severo`, `m`.`observacao_severo`
+            `m`.`km_ideal`, `m`.`tempo_ideal` AS `meses_ideal`, `m`.`observacao_ideal`, `m`.`km_misto`, `m`.`tempo_misto` AS `meses_misto`, 
+            `m`.`observacao_misto`, `m`.`km_severo`, `m`.`tempo_severo` AS `meses_severo`, `m`.`observacao_severo`
             FROM `manual_fixo` AS `m`
             INNER JOIN `titulo_fixo` AS `t` ON `m`.`id_titulo` = `t`.`id`
             WHERE `m`.`active` = 1");
@@ -415,6 +417,7 @@ class ManualController extends Controller
 
             $manual = DB::select("SELECT `manual_carro`.`id_manual` AS `id`, `manual`.`item`, `manual_carro`.`id_manual`,
                 `manual_carro`.`km_ideal`, `manual_carro`.`tempo_ideal` AS `meses_ideal`, `manual_carro`.`observacao_ideal`,
+                `manual_carro`.`km_misto`, `manual_carro`.`tempo_misto` AS `meses_misto`, `manual_carro`.`observacao_misto`,
                 `manual_carro`.`km_severo`, `manual_carro`.`tempo_severo` AS `meses_severo`, `manual_carro`.`observacao_severo`,
                 `titulo`.`titulo`, `manual`.`id_titulo`, `manual_carro`.`id` AS `id_manual_carro`
                 FROM `manual_carro`
@@ -511,8 +514,10 @@ class ManualController extends Controller
 
             for ($i = 0; $i < count($request->itens); $i++) {
                 DB::update('UPDATE `manual_carro` SET `km_ideal` = ?, `tempo_ideal` = ?, `observacao_ideal` = ?,
+                    `km_misto` = ?, `tempo_misto` = ?, `observacao_misto` = ?,
                     `km_severo` = ?, `tempo_severo` = ?, `observacao_severo` = ?
                 WHERE id_manual = ? AND id_marca = ? AND id_modelo = ? AND ano = ? AND id_versao = ?', [$request->itens[$i]['km_ideal'], $request->itens[$i]['meses_ideal'], $request->itens[$i]['observacao_ideal'], 
+                $request->itens[$i]['km_misto'], $request->itens[$i]['meses_misto'], $request->itens[$i]['observacao_misto'],
                 $request->itens[$i]['km_severo'], $request->itens[$i]['meses_severo'], $request->itens[$i]['observacao_severo'], $request->itens[$i]['id'], 
                 $request->marca, $request->modelo, $request->ano, $request->versao]);
             }
@@ -543,9 +548,9 @@ class ManualController extends Controller
             }
 
             DB::insert('INSERT INTO `manual_carro` (`id_manual`, `id_marca`, `id_modelo`, `ano`, `id_versao`, `km_ideal`,
-                `tempo_ideal`, `observacao_ideal`, `km_severo`, `tempo_severo`, `observacao_severo`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                `tempo_ideal`, `observacao_ideal`, `km_misto`, `tempo_misto`, `observacao_misto`, `km_severo`, `tempo_severo`, `observacao_severo`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
             [$request->item, $request->marca, $request->modelo, $request->ano, $request->versao, $request->km_ideal, $request->meses_ideal, 
-            $request->observacao_ideal, $request->km_severo, $request->meses_severo, $request->observacao_severo]);
+            $request->observacao_ideal, $request->km_misto, $request->meses_misto, $request->observacao_misto, $request->km_severo, $request->meses_severo, $request->observacao_severo]);
             
             $list = $this->getManualCarro($request, $request->marca, $request->modelo, $request->ano, $request->versao);
 
@@ -558,9 +563,10 @@ class ManualController extends Controller
     public function editManualItem(Request $request) {
         try {
             DB::update('UPDATE `manual_carro` SET `km_ideal` = ?, `tempo_ideal` = ?, `observacao_ideal` = ?, 
-                `km_severo` = ?, `tempo_severo` = ?, `observacao_severo` = ? WHERE id = ?', 
-                [$request->km_ideal, $request->meses_ideal, $request->observacao_ideal, $request->km_severo, 
-                $request->meses_severo, $request->observacao_severo, $request->id]);
+                `km_misto` = ?, `tempo_misto` = ?, `observacao_misto` = ?, `km_severo` = ?, `tempo_severo` = ?, `observacao_severo` = ? WHERE id = ?', 
+                [$request->km_ideal, $request->meses_ideal, $request->observacao_ideal,
+                $request->km_misto, $request->meses_misto, $request->observacao_misto,
+                $request->km_severo, $request->meses_severo, $request->observacao_severo, $request->id]);
             
             $list = $this->getManualCarro($request, $request->id_marca, $request->id_modelo, $request->ano, $request->id_versao);
             $message = 'Item alterado com sucesso.';
