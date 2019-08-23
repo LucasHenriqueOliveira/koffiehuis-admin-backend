@@ -76,6 +76,11 @@ Route::group([
     Route::put('opcional', 'OpcionalController@edit');
     Route::delete('opcional/{id}', 'OpcionalController@remove');
 
+    Route::get('grupo', 'GrupoController@get');
+    Route::post('grupo', 'GrupoController@save');
+    Route::put('grupo', 'GrupoController@edit');
+    Route::delete('grupo/{id}', 'GrupoController@remove');
+
     Route::get('fluido', 'FluidoController@get');
     Route::post('fluido', 'FluidoController@save');
     Route::put('fluido', 'FluidoController@edit');

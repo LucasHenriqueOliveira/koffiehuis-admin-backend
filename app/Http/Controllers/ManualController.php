@@ -581,24 +581,26 @@ class ManualController extends Controller
     public function saveItem(Request $request) {
 
         try {
-            DB::insert('INSERT INTO `item` (`id_manual`, `nome`) VALUES (?, ?)', 
-            [$request->selectedManual, $request->item]);
-            return $this->successResponse(null, 'Item inserido com sucesso.');
+            DB::insert('INSERT INTO `manutencao` (`id_manual`, `id_grupo`) VALUES (?, ?)', 
+            [$request->selectedManual, $request->selectedGrupo]);
+            $list = $this->getItem($request);
+            return $this->successResponse($list, 'Item inserido com sucesso.');
         } catch (Exception $e) {
             return $this->failedResponse();
         }
     }
 
     public function getItem(Request $request) {
-        return DB::select("SELECT `manual`.`item`, `item`.*
-        FROM `manual` AS `manual` 
-        INNER JOIN `item` AS `item` ON `manual`.`id` = `item`.`id_manual` 
-        WHERE `manual`.`active` = 1");
+        return DB::select("SELECT `ma`.`item`, `mt`.*, `g`.`nome` AS `nome_grupo`
+        FROM `manual` AS `ma` 
+        INNER JOIN `manutencao` AS `mt` ON `ma`.`id` = `mt`.`id_manual` 
+        INNER JOIN `grupo` AS `g` on `g`.`id` = `mt`.`id_grupo`
+        WHERE `mt`.`active` = 1 AND `g`.`active` = 1 ORDER BY `g`.`nome` ASC");
     }
 
     public function removeItem(Request $request, $id) {
         try {
-            DB::delete('DELETE FROM `item` WHERE `id` = ?', [$id]);
+            DB::update('UPDATE `manutencao` SET `active` = ? WHERE `id` = ?', [0, $id]);
             $list = $this->getItem($request);
             $message = 'Item deletado com sucesso.';
             return $this->successResponse($list, $message);
@@ -609,7 +611,7 @@ class ManualController extends Controller
 
     public function editItem(Request $request) {
         try {
-            DB::update('UPDATE `item` SET `nome` = ?, `id_manual` = ? WHERE id = ?', [$request->nome, $request->id_manual, $request->id]);
+            DB::update('UPDATE `manutencao` SET `id_grupo` = ?, `id_manual` = ? WHERE id = ?', [$request->id_grupo, $request->id_manual, $request->id]);
             $list = $this->getItem($request);
             $message = 'Item alterado com sucesso.';
             return $this->successResponse($list, $message);
