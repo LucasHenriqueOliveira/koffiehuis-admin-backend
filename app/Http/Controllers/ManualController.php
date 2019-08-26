@@ -268,13 +268,17 @@ class ManualController extends Controller
     // ITEM DO MANUAL -------------------------------------
 
     public function getItemManual(Request $request) {
-        return DB::select("SELECT `m`.`id`, `m`.`item`, `m`.`id_titulo`, `t`.`titulo`, `m`.`altera_uso`, `m`.`etiqueta_oleo`, `m`.`opcional` FROM `manual` AS `m`
+        return DB::select("SELECT `m`.`id`, `m`.`item`, `m`.`id_titulo`, `t`.`titulo`, `m`.`altera_uso`, `m`.`etiqueta_oleo`, `m`.`opcional`, `m`.`descricao` FROM `manual` AS `m`
             INNER JOIN `titulo` AS `t` ON `m`.`id_titulo` = `t`.`id`
             WHERE `m`.`active` = 1");
     }
 
     public function getItemManualTitulo(Request $request, $id) {
         return DB::select("SELECT `id`, `item`, `id_titulo`, `altera_uso`, `etiqueta_oleo`, `opcional` FROM `manual` WHERE `id_titulo` = ?", [$id]);
+    }
+
+    public function getItemManualTituloSevero(Request $request, $id) {
+        return DB::select("SELECT `id`, `item`, `id_titulo`, `altera_uso`, `etiqueta_oleo`, `opcional` FROM `manual` WHERE `id_titulo` = ? AND `altera_uso` = 1", [$id]);
     }
 
     public function saveItemManual(Request $request) {
@@ -301,7 +305,7 @@ class ManualController extends Controller
 
     public function editItemManual(Request $request) {
         try {
-            DB::update('UPDATE `manual` SET `item` = ?, `altera_uso` = ?, `etiqueta_oleo` = ?, `opcional` = ? WHERE id = ?', [$request->item, $request->altera_uso, $request->etiqueta_oleo, $request->opcional, $request->id]);
+            DB::update('UPDATE `manual` SET `item` = ?, `descricao` = ?, `altera_uso` = ?, `etiqueta_oleo` = ?, `opcional` = ? WHERE id = ?', [$request->item, $request->descricao, $request->altera_uso, $request->etiqueta_oleo, $request->opcional, $request->id]);
             $list = $this->getItemManual($request);
             $message = 'Item alterado com sucesso.';
             return $this->successResponse($list, $message);
