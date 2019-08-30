@@ -10,28 +10,38 @@ class UsoController extends Controller
 {
     public function get(Request $request) {
         $arr = array();
-        $arrItens = array();
-        $uso = DB::select("SELECT * FROM `condicoes_uso` WHERE `active` = 1");
+        $uso = DB::select("SELECT *, `co`.`id` AS `id_opcao` 
+            FROM `condicoes_uso` AS `c` INNER JOIN `condicoes_uso_opcoes` AS `co` 
+            ON `c`.`id` = `co`.`id_condicao_uso`
+            WHERE `c`.`active` = 1 AND `co`.`active` = 1");
 
         for ($i = 0; $i < count($uso); $i++) {
-            $opcoes = DB::select("SELECT * FROM `condicoes_uso_opcoes` WHERE `id_condicao_uso` = ? AND `active` = 1", [$uso[$i]->id]);
-            $arr['id'] = $uso[$i]->id;
-            $arr['pergunta'] = $uso[$i]->pergunta;
-            $arr['opcoes'] = $opcoes;
-            array_push($arrItens, $arr);
+            $items = DB::select("SELECT `m`.`id_titulo`,`m`.`item`,`c`.`id` AS `id_opcao_item` 
+                FROM `condicoes_uso_opcoes_item` AS `c` 
+                INNER JOIN `manual` AS `m`  
+                ON `c`.`id_item` = `m`.`id`
+                WHERE `id_opcao` = ? AND `c`.`active` = 1", [$uso[$i]->id_opcao]);
+
+            $uso[$i]->items = $items;
         }
 
-        return $arrItens;
+        return $uso;
     }
 
     public function save(Request $request) {
         try {
-            DB::insert('INSERT INTO `condicoes_uso` (`pergunta`) VALUES (?)', [$request->pergunta]);
+            DB::insert('INSERT INTO `condicoes_uso` (`pergunta`, `nickname`) VALUES (?, ?)', [$request->pergunta, $request->nickname]);
             $id = DB::getPdo()->lastInsertId();
             
             for ($i = 0; $i < count($request->opcoes); $i++) {
-                DB::insert('INSERT INTO `condicoes_uso_opcoes` (`opcao`, `id_condicao_uso`) VALUES (?, ?)', 
-                    [$request->opcoes[$i], $id]);
+                DB::insert('INSERT INTO `condicoes_uso_opcoes` (`opcao`, `id_condicao_uso`, `condicao`) VALUES (?, ?, ?)', 
+                    [$request->opcoes[$i]['opcao'], $id, $request->opcoes[$i]['condicao']]);
+                $id_opcao = DB::getPdo()->lastInsertId();
+
+                for ($m = 0; $m < count($request->opcoes[$i]['items']); $m++) {
+                    DB::insert('INSERT INTO `condicoes_uso_opcoes_item` (`id_opcao`, `id_item`) VALUES (?, ?)', 
+                    [$id_opcao, $request->opcoes[$i]['items'][$m]['id']]);
+                }
             }
             
             $list = $this->get($request);
@@ -57,11 +67,12 @@ class UsoController extends Controller
 
     public function remove(Request $request, $id) {
         try {
-            DB::update('UPDATE condicoes_uso SET `active` = ? WHERE id = ?', [0, $id]);
-            DB::update('UPDATE condicoes_uso_opcoes SET `active` = ? WHERE id_condicao_uso = ?', [0, $id]);
+            // DB::update('UPDATE condicoes_uso SET `active` = ? WHERE id = ?', [0, $id]);
+            DB::update('UPDATE condicoes_uso_opcoes SET `active` = ? WHERE id = ?', [0, $id]);
+            DB::update('UPDATE condicoes_uso_opcoes_item SET `active` = ? WHERE id_opcao = ?', [0, $id]);
 
             $list = $this->get($request);
-            $message = 'Condição de uso deletado com sucesso.';
+            $message = 'Opção da condição de uso deletado com sucesso.';
             return $this->successResponse($list, $message);
         } catch (Exception $e) {
             return $this->failedResponse();
@@ -70,8 +81,22 @@ class UsoController extends Controller
 
     public function edit(Request $request) {
         try {
-            DB::update('UPDATE condicoes_uso SET `pergunta` = ? WHERE id = ?', [$request->pergunta, $request->id]);
-            $list = DB::select("SELECT * FROM `condicoes_uso` WHERE `active` = 1");
+            DB::update('UPDATE condicoes_uso SET `pergunta` = ?, `nickname` = ? WHERE id = ?', 
+                [$request->pergunta, $request->nickname, $request->id_condicao_uso]);
+
+            DB::update('UPDATE condicoes_uso_opcoes SET `opcao` = ?, `condicao` = ? WHERE id = ?', 
+                [$request->opcao, $request->condicao, $request->id]);
+
+            for ($i = 0; $i < count($request->itensAdicionados); $i++) {
+                DB::insert('INSERT INTO `condicoes_uso_opcoes_item` (`id_opcao`, `id_item`) VALUES (?, ?)', 
+                    [$request->id, $request->itensAdicionados[$i]]);
+            }
+
+            for ($i = 0; $i < count($request->itensRemovidos); $i++) {
+                DB::update('UPDATE condicoes_uso_opcoes_item SET `active` = ? WHERE id = ?', [0, $request->itensRemovidos[$i]]);
+            }
+
+            $list = $this->get($request);
             $message = 'Condição de uso alterado com sucesso.';
             return $this->successResponse($list, $message);
         } catch (Exception $e) {

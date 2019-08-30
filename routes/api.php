@@ -30,6 +30,7 @@ Route::group([
 
     Route::get('manual-itens', 'ManualController@getItemManual');
     Route::get('manual-itens/{id}', 'ManualController@getItemManualTitulo');
+    Route::get('manual-itens-severo/{id}', 'ManualController@getItemManualTituloSevero');
     Route::post('manual-itens', 'ManualController@saveItemManual');
     Route::delete('manual-itens/{id}', 'ManualController@removeItemManual');
     Route::put('manual-itens', 'ManualController@editItemManual');
