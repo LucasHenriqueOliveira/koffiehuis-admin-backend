@@ -10,10 +10,10 @@ class DashboardController extends Controller
 {
     public function get(Request $request) {
         $arrList = array();
-        $usuarios = DB::select("SELECT count(*) AS `usuarios` FROM `users`")[0];
+        $usuarios = DB::select("SELECT count(*) AS `usuarios` FROM `usrInfo`")[0];
         $arrList['usuarios'] = $usuarios->usuarios;
 
-        $carros = DB::select("SELECT count(*) AS `carros` FROM `carros` WHERE `active` = 1")[0];
+        $carros = DB::select("SELECT count(*) AS `carros` FROM `vehicle` WHERE `status` = 1")[0];
         $arrList['carros'] = $carros->carros;
 
         $condicoes_uso = DB::select("SELECT count(*) AS `condicoes_uso` FROM `condicoes_uso` WHERE `active` = 1")[0];
