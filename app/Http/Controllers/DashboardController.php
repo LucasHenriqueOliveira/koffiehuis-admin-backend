@@ -10,18 +10,22 @@ class DashboardController extends Controller
 {
     public function get(Request $request) {
         $arrList = array();
-        $usuarios = DB::select("SELECT count(*) AS `usuarios` FROM `usrInfo`")[0];
-        $arrList['usuarios'] = $usuarios->usuarios;
+        $produtos = DB::select("SELECT `id_product`, `name` FROM `products` WHERE `quantity` > 0 ORDER BY name ASC");
+        $arrList['produtos'] = $produtos;
 
-        $carros = DB::select("SELECT count(*) AS `carros` FROM `vehicle` WHERE `status` = 1")[0];
-        $arrList['carros'] = $carros->carros;
-
-        $condicoes_uso = DB::select("SELECT count(*) AS `condicoes_uso` FROM `condicoes_uso` WHERE `active` = 1")[0];
-        $arrList['condicoes_uso'] = $condicoes_uso->condicoes_uso;
-
-        $manual = DB::select("SELECT id FROM `manual_carro` WHERE `active` = 1 GROUP BY id_marca, id_modelo, ano, id_versao");
-        $arrList['manual'] = count($manual);
+        $estoque = DB::select("SELECT `name`, DATE_FORMAT(`date`,'%d/%m/%Y %H:%m') as date FROM `stock` INNER JOIN `products` ON `stock`.`id_product` = `products`.`id_product` WHERE `date` >= DATE_SUB(CONCAT(CURDATE(), ' 00:00:00'), INTERVAL 1 DAY)");
+        $arrList['estoque'] = $estoque;
 
         return $arrList;
+    }
+
+    public function remove(Request $request) {
+
+    	DB::insert('INSERT INTO `stock` (`id_product`, `id_user`, `date`) VALUES (?, ?, ?)', 
+    		[$request->id, 1, now()]);
+
+        DB::update('UPDATE `products` SET `quantity` = quantity - 1 WHERE id_product = ?', [$request->id]);
+
+        return $this->get($request);
     }
 }
